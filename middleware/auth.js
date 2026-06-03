@@ -6,8 +6,8 @@ const verifyJWT = (req, res, next) => {
      if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).json({
             code: 401,
-            status: 'failure',
-            message: 'Access denied. No token provided.'
+            status: "failure",
+            message: "Access denied. No token provided."
         });
     }
     const token = authHeader.split(' ')[1] //* token position
@@ -18,8 +18,8 @@ const verifyJWT = (req, res, next) => {
             if (err) {
             return res.status(401).json({
                 code: 401,
-                status: 'failure',
-                message: 'Invalid token.'
+                status: "failure",
+                message: "Invalid token."
             });
         }
         
