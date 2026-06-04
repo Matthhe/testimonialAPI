@@ -1,5 +1,6 @@
 import Testimonial from "../models/testimonial"
 import User from "../models/user";
+const {VALID_TRANSITIONS} = require('../lib/constants')
 
 const create = async (req, res) => {
     try {
@@ -87,16 +88,19 @@ const getOne = async (req, res) => {
         const userId = req.user.userId
         const testimonialId = req.params.testimonialId
         const testimonial = await Testimonial.findOne({testimonialId, isDeleted: false})
+
         if(!testimonial) return res.status(404).json({
             code: 404,
             status: "failure", 
             message: "Testimonial not found"
         })
+
         if(testimonial.userId !== userId) return res.status(403).json({
             code: 403,
             status: "failure",
             message: "Forbidden"
         })
+
         return res.status(200).json({
             code: 200,
             status: "success",
@@ -120,16 +124,19 @@ const update = async (req, res) => {
         const userId = req.user.userId
         const testimonialId = req.params.testimonialId
         const testimonial = await Testimonial.findOne({testimonialId, isDeleted: false})
+        
         if(!testimonial) return res.status(404).json({
             code: 404,
             status: "failure", 
             message: "Testimonial not found"
         })
+
         if(testimonial.userId !== userId) return res.status(403).json({
             code: 403,
             status: "failure",
             message: "Forbidden"
         })
+
         const allowedUpdates = ['customerName', 'customerEmail', 'customerPhone', 'videoUrl', 'rating', 'text', 'consentGiven'];
             allowedUpdates.forEach(field => {
                 if (req.body[field] !== undefined) {
@@ -158,6 +165,63 @@ const update = async (req, res) => {
                 status: 'failure',
                 message: 'Internal server error'
             });
+    }
+}
+
+const updateStatus = async (req, res) => {
+    try{
+        const status = req.body.status
+        const userId = req.user.userId;
+        const testimonialId = req.params.testimonialId
+        const testimonial = await Testimonial.findOne({testimonialId, isDeleted: false})
+        if(!testimonial){
+            return res.status(404).json({
+                code: 404,
+                status: "failure", 
+                message: "Testimonial not found"
+            })
+        }
+        if(testimonial.userId !== userId) return res.status(403).json({
+                code: 403,
+                status: "failure",
+                message: "Forbidden"
+        })
+
+        if(!status) return res.status(400).json({
+            code: 400,
+            status: "failure",
+            message: "Status is required"
+        })
+
+        const allowedTransitions = VALID_TRANSITIONS[testimonial.status]
+        if(!allowedTransitions || !allowedTransitions.includes(status)){
+            return res.status(400).json({
+                code: 400,
+                status: "failure",
+                message: `Cannot transition from ${testimonial.status} to ${status}`
+            })
+        }
+        testimonial.status = status;
+            if (status === 'shared') {
+                testimonial.sharedAt = new Date();
+            }
+        await testimonial.save();
+        return res.status(200).json({ code: 200, status: 'success', message: 'Status updated', data: testimonial });
+    }
+    catch(err){
+        console.error(err)
+        if (err.name === 'ValidationError') {
+            return res.status(400).json({
+                code: 400, 
+                status: 'failure', 
+                message: err.message });
+        }
+
+        return res.status(500).json({
+                code: 500,
+                status: 'failure',
+                message: 'Internal server error'
+        });
     }
 }
 
