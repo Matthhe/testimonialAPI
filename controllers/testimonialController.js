@@ -1,6 +1,7 @@
 import Testimonial from "../models/testimonial"
 import User from "../models/user";
-const {VALID_TRANSITIONS} = require('../lib/constants')
+const TestimonialSettings = require('../models/testimonialSettings');
+const {VALID_TRANSITIONS, SHARE_CHANNELS} = require('../lib/constants')
 
 const create = async (req, res) => {
     try {
@@ -225,4 +226,193 @@ const updateStatus = async (req, res) => {
     }
 }
 
-module.exports = { create, getAll, getOne };
+const remove = async (req, res) => {
+    try{
+        const user = req.user.userId
+        const testimonialId = req.params.testimonialId
+        const testimonial = await Testimonial.findOne({testimonialId, isDeleted: false})
+        if(!testimonial){
+            return res.status(404).json({
+                code: 404,
+                status: "failure", 
+                message: "Testimonial not found"
+            })
+        }
+        if (testimonial.userId !== userId) {
+            return res.status(403).json({
+                code: 403,
+                status: 'failure',
+                message: 'Forbidden'
+            });
+        }
+
+        testimonial.isDeleted = true;
+        testimonial.deletedAt = new Date();
+        await testimonial.save();
+
+        return res.status(200).json({
+            code: 200,
+            status: 'success',
+            message: 'Testimonial deleted'
+        });
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            code: 500,
+            status: 'failure',
+            message: 'Internal server error'
+        });
+    }
+}
+
+const share = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const testimonialId = req.params.testimonialId;
+        const { channels } = req.body;
+
+        if (!channels || !Array.isArray(channels) || channels.length === 0) {
+            return res.status(400).json({
+                code: 400,
+                status: 'failure',
+                message: 'Channels are required and must be a non-empty array'
+            });
+        }
+
+        const invalidChannels = channels.filter(ch => !SHARE_CHANNELS.includes(ch));
+        if (invalidChannels.length > 0) {
+            return res.status(400).json({
+                code: 400,
+                status: 'failure',
+                message: `Invalid channel(s): ${invalidChannels.join(', ')}`
+            });
+        }
+
+        const testimonial = await Testimonial.findOne({ testimonialId, isDeleted: false });
+        if (!testimonial) {
+            return res.status(404).json({
+                code: 404,
+                status: 'failure',
+                message: 'Testimonial not found'
+            });
+        }
+
+        if (testimonial.userId !== userId) {
+            return res.status(403).json({
+                code: 403,
+                status: 'failure',
+                message: 'Forbidden'
+            });
+        }
+
+        channels.forEach(channel => {
+            if (!testimonial.sharedChannels.includes(channel)) {
+                testimonial.sharedChannels.push(channel);
+            }
+        });
+
+        if (testimonial.status === 'completed') {
+            testimonial.status = 'shared';
+        }
+
+        if (!testimonial.sharedAt) {
+            testimonial.sharedAt = new Date();
+        }
+
+        await testimonial.save();
+
+        return res.status(200).json({
+            code: 200,
+            status: 'success',
+            message: 'Testimonial shared successfully',
+            data: testimonial
+        });
+
+    } catch (err) {
+        console.error(err);
+        if (err.name === 'ValidationError') {
+            return res.status(400).json({
+                code: 400,
+                status: 'failure',
+                message: err.message
+            });
+        }
+        return res.status(500).json({
+            code: 500,
+            status: 'failure',
+            message: 'Internal server error'
+        });
+    }
+};
+
+const getSettings = async (req, res) => {
+    try{
+        const userId = req.user.userId;
+        const settings = await TestimonialSettings.findOne({userId})
+        if(!settings) return res.status(200).json({
+            code: 200,
+            status: "success",
+            message: "No settings found", 
+            data: null
+        })
+        return res.status(200).json({
+            code: 200,
+            status: "success",
+            message: "Data retrieved successfully",
+            data: settings
+        })
+    } catch(err){
+        console.error(err)
+        if (err.name === 'ValidationError') {
+            return res.status(400).json({
+                code: 400,
+                status: 'failure',
+                message: err.message
+            });
+        }
+        return res.status(500).json({
+            code: 500,
+            status: 'failure',
+            message: 'Internal server error'
+        });
+    }
+}
+
+const updateSettings = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        delete req.body.userId;
+
+        const settings = await TestimonialSettings.findOneAndUpdate(
+            { userId },
+            { $set: req.body },
+            { upsert: true, new: true, runValidators: true }
+        );
+
+        return res.status(200).json({
+            code: 200,
+            status: 'success',
+            message: 'Settings saved',
+            data: settings
+        });
+
+    } catch (err) {
+        console.error(err);
+        if (err.name === 'ValidationError') {
+            return res.status(400).json({
+                code: 400,
+                status: 'failure',
+                message: err.message
+            });
+        }
+        return res.status(500).json({
+            code: 500,
+            status: 'failure',
+            message: 'Internal server error'
+        });
+    }
+};
+
+module.exports = { create, getAll, getOne, update, updateStatus, remove, share, getSettings, updateSettings };
