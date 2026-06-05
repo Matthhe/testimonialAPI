@@ -1,5 +1,5 @@
-import Testimonial from "../models/testimonial"
-import User from "../models/user";
+const Testimonial = require('../models/testimonial')
+const User = require('../models/user')
 const TestimonialSettings = require('../models/testimonialSettings');
 const {VALID_TRANSITIONS, SHARE_CHANNELS} = require('../lib/constants')
 
@@ -228,7 +228,7 @@ const updateStatus = async (req, res) => {
 
 const remove = async (req, res) => {
     try{
-        const user = req.user.userId
+        const userId = req.user.userId
         const testimonialId = req.params.testimonialId
         const testimonial = await Testimonial.findOne({testimonialId, isDeleted: false})
         if(!testimonial){
@@ -415,4 +415,85 @@ const updateSettings = async (req, res) => {
     }
 };
 
-module.exports = { create, getAll, getOne, update, updateStatus, remove, share, getSettings, updateSettings };
+const getAnalytics = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { startDate, endDate } = req.query;
+
+        const match = { userId, isDeleted: false };
+
+        if (startDate || endDate) {
+            match.createdAt = {};
+            if (startDate) match.createdAt.$gte = new Date(startDate);
+            if (endDate) match.createdAt.$lte = new Date(endDate);
+        }
+
+        const pipeline = [
+            { $match: match },
+            {
+                $facet: {
+                    byStatus: [
+                        { $group: { _id: '$status', count: { $sum: 1 } } }
+                    ],
+                    averageRating: [
+                        { $match: { rating: { $exists: true, $ne: null } } },
+                        { $group: { _id: null, avg: { $avg: '$rating' } } }
+                    ],
+                    total: [
+                        { $count: 'count' }
+                    ]
+                }
+            },
+            {
+                $project: {
+                    total: { $arrayElemAt: ['$total.count', 0] },
+                    byStatus: 1,
+                    averageRating: { $arrayElemAt: ['$averageRating.avg', 0] }
+                }
+            }
+        ];
+
+        const [result] = await Testimonial.aggregate(pipeline);
+
+        const byStatusObj = {};
+        if (result && result.byStatus) {
+            result.byStatus.forEach(item => {
+                byStatusObj[item._id] = item.count;
+            });
+        }
+
+        const allStatuses = ['draft', 'recording', 'processing', 'completed', 'shared'];
+        allStatuses.forEach(status => {
+            if (!byStatusObj[status]) byStatusObj[status] = 0;
+        });
+
+        const data = {
+            overview: {
+                total: result ? result.total || 0 : 0,
+                byStatus: byStatusObj,
+                averageRating: result ? parseFloat((result.averageRating || 0).toFixed(1)) : 0
+            },
+            period: {
+                startDate: startDate ? new Date(startDate).toISOString() : null,
+                endDate: endDate ? new Date(endDate).toISOString() : null
+            }
+        };
+
+        return res.status(200).json({
+            code: 200,
+            status: 'success',
+            message: 'Data retrieved successfully',
+            data
+        });
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            code: 500,
+            status: 'failure',
+            message: 'Internal server error'
+        });
+    }
+};
+
+module.exports = { create, getAll, getOne, update, updateStatus, remove, share, getSettings, updateSettings, getAnalytics };
