@@ -1,5 +1,7 @@
 require('dotenv').config();
 const express = require('express');
+const helmet = require('helmet')
+const cors = require('cors')
 const mongoose = require('mongoose');
 const app = express();
 
@@ -21,7 +23,9 @@ if (!process.env.MONGODB_URI) {
     process.exit(1);
 }
 
-app.use(express.json());
+app.use(helmet())
+app.use(cors())
+app.use(express.json({ limit: '10kb' }));
 
 app.use('/api/auth', require('./routes/authRoute'))
 app.use('/api/testimonials', require('./routes/testimonialRoute'));
