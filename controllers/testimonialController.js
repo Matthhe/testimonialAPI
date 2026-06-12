@@ -15,9 +15,13 @@ const create = async (req, res) => {
             });
         }
 
-        const testimonial = new Testimonial({
-            ...req.body,            
-            userId: req.user.userId 
+        const allowedFields = [
+            'customerName', 'customerEmail', 'customerPhone',
+            'videoUrl', 'rating', 'text', 'consentGiven'
+        ];
+        const data = { userId: req.user.userId };
+        allowedFields.forEach(field => {
+            if (req.body[field] !== undefined) data[field] = req.body[field];
         });
 
         await testimonial.save();
