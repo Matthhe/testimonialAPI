@@ -3,6 +3,24 @@ const express = require('express');
 const mongoose = require('mongoose');
 const app = express();
 
+if (!process.env.JWT_SECRET) {
+    console.error(JSON.stringify({
+        code: 500,
+        status: 'failure',
+        message: 'FATAL: JWT_SECRET is not defined. Server cannot start.'
+    }));
+    process.exit(1);
+}
+
+if (!process.env.MONGODB_URI) {
+    console.error(JSON.stringify({
+        code: 500,
+        status: 'failure',
+        message: 'FATAL: MONGODB_URI is not defined. Server cannot start.'
+    }));
+    process.exit(1);
+}
+
 app.use(express.json());
 
 app.use('/api/auth', require('./routes/authRoute'))
@@ -10,10 +28,14 @@ app.use('/api/testimonials', require('./routes/testimonialRoute'));
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+        code: 500,
+        status: 'failure',
+        message: 'Internal server error'
+    });
 });
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => {
         console.log('MongoDB connected');

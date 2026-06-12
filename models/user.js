@@ -2,6 +2,13 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
 const {ROLES, DEFAULT_ROLE} = require('../lib/constants')
 
+
+const counterSchema = new mongoose.Schema({
+    _id: { type: String, required: true },
+    seq: { type: Number, default: 0 }
+});
+const Counter = mongoose.model('Counter', counterSchema);
+
 const userSchema = new mongoose.Schema(
     {
         userId:{
@@ -38,18 +45,19 @@ const userSchema = new mongoose.Schema(
 
 //* Autoincrement id
 userSchema.pre('save', async function (next) {
-    if(this.isNew){
-        try{
-            const lastUser = await mongoose.model("User").findOne().sort({userId: -1 })
-            this.userId = lastUser ? lastUser.userId + 1 : 1;
-            next();
-        } catch (err) {
-            next(err);
-        }
-    } else {
+    if (!this.isNew) return next();
+    try {
+        const counter = await Counter.findOneAndUpdate(
+            { _id: 'userId' },
+            { $inc: { seq: 1 } },
+            { new: true, upsert: true }
+        );
+        this.userId = counter.seq;
         next();
+    } catch (err) {
+        next(err);
     }
-})
+});
 
 //* Hash pwd
 userSchema.pre('save', async function(next){
