@@ -310,17 +310,17 @@ const share = async (req, res) => {
             });
         }
 
+        if (testimonial.status === 'completed') {
+            testimonial.status = 'shared';
+        }
+
         channels.forEach(channel => {
             if (!testimonial.sharedChannels.includes(channel)) {
                 testimonial.sharedChannels.push(channel);
             }
         });
 
-        if (testimonial.status === 'completed') {
-            testimonial.status = 'shared';
-        }
-
-        if (!testimonial.sharedAt) {
+        if (testimonial.status === 'shared' && !testimonial.sharedAt) {
             testimonial.sharedAt = new Date();
         }
 
