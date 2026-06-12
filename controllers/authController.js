@@ -66,6 +66,14 @@ const Register = async (req, res) => {
             });
         }
 
+        if (password.length < 6) {
+            return res.status(400).json({
+                code: 400,
+                status: "failure",
+                message: "Password must be at least 6 characters"
+            });
+        }
+        
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             return res.status(400).json({
