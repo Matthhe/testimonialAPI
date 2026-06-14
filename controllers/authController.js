@@ -2,95 +2,59 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken');
 require('dotenv').config()
 const User = require('../models/user')
+const { sendSuccess, sendError } = require('../lib/response')
 
-const Login = async (req, res) => {
+const login = async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) {
-            return res.status(400).json({
-                code: 400, 
-                status: "failure", 
-                message: "Email and password are required." 
-            });
+            return sendError(res, 400, 'Email and password are required.');
         }
 
         const foundUser = await User.findOne({ email });
-            if (!foundUser) {
-                return res.status(401).json({
-                    code: 401, 
-                    status: "failure", 
-                    message: "Invalid email or password." 
-                });
-            }
+        if (!foundUser) {
+            return sendError(res, 401, 'Invalid email or password.');
+        }
 
         const match = await foundUser.comparePassword(password);
-            if (!match) {
-                return res.status(401).json({ 
-                    code: 401, 
-                    status: "failure", 
-                    message: "Invalid email or password." 
-                });
-            }
+        if (!match) {
+            return sendError(res, 401, 'Invalid email or password.');
+        }
 
-        const accessToken = jwt.sign({ 
-            userId: foundUser.userId, email: foundUser.email }, 
-            process.env.JWT_SECRET, 
-            {expiresIn: process.env.JWT_EXPIRY}
+        const accessToken = jwt.sign(
+            { userId: foundUser.userId, email: foundUser.email },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRY }
         );
 
-        return res.status(200).json({
-            code: 200, 
-            status: "success", 
-            message: "Login successful", 
-            data: {token: accessToken} 
-        });
-
+        return sendSuccess(res, 200, 'Login successful', { token: accessToken });
     } catch (err) {
         console.error(err);
-        return res.status(500).json({
-            code: 500, 
-            status: "failure", 
-            message: "Internal server error" 
-        });
+        return sendError(res, 500, 'Internal server error');
     }
 }
 
-const Register = async (req, res) => {
+const register = async (req, res) => {
     try {
         const { email, password, businessName } = req.body;
         if (!email || !password || !businessName) {
-            return res.status(400).json({
-                code: 400, 
-                status: "failure", 
-                message: "Email, password and businessName are required." 
-            });
+            return sendError(res, 400, 'Email, password and businessName are required.');
         }
 
         if (password.length < 6) {
-            return res.status(400).json({
-                code: 400,
-                status: "failure",
-                message: "Password must be at least 6 characters"
-            });
+            return sendError(res, 400, 'Password must be at least 6 characters.');
         }
-        
+
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            return res.status(400).json({
-                code: 400, 
-                status: "failure", 
-                message: "Invalid email format." 
-            });
+            return sendError(res, 400, 'Invalid email format.');
         }
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({
-                code: 400, 
-                status: "failure", 
-                message: "Email already registered." 
-            });
+            return sendError(res, 400, 'Email already registered.');
         }
+
         const user = new User({ email, password, businessName });
         await user.save();
 
@@ -100,26 +64,16 @@ const Register = async (req, res) => {
             { expiresIn: process.env.JWT_EXPIRY }
         );
 
-        return res.status(201).json({
-            code: 201,
-            status: "success",
-            message: "Registration successful",
-            data: {
-                userId: user.userId,
-                email: user.email,
-                businessName: user.businessName,
-                token: accessToken
-            }
+        return sendSuccess(res, 201, 'Registration successful', {
+            userId: user.userId,
+            email: user.email,
+            businessName: user.businessName,
+            token: accessToken
         });
-
     } catch (err) {
         console.error(err);
-        return res.status(500).json({
-            code: 500, 
-            status: "failure", 
-            message: "Internal server error" 
-        });
+        return sendError(res, 500, 'Internal server error');
     }
 };
-    
-module.exports = {Login, Register}
+
+module.exports = { login, register };

@@ -1,17 +1,14 @@
 const Testimonial = require('../models/testimonial')
 const TestimonialSettings = require('../models/testimonialSettings');
-const {VALID_TRANSITIONS, SHARE_CHANNELS} = require('../lib/constants')
+const { VALID_TRANSITIONS, SHARE_CHANNELS } = require('../lib/constants')
+const { sendSuccess, sendError } = require('../lib/response')
 
 const create = async (req, res) => {
     try {
         const { customerName } = req.body;
 
         if (!customerName) {
-            return res.status(400).json({
-                code: 400,
-                status: 'failure',
-                message: 'customerName is required.'
-            });
+            return sendError(res, 400, 'customerName is required.');
         }
 
         const allowedFields = [
@@ -23,32 +20,19 @@ const create = async (req, res) => {
             if (req.body[field] !== undefined) data[field] = req.body[field];
         });
 
-        const testimonial = new Testimonial(data); 
+        const testimonial = new Testimonial(data);
         await testimonial.save();
 
-        return res.status(201).json({
-            code: 201,
-            status: 'success',
-            message: 'Testimonial created successfully.',
-            data: testimonial
-        });
-
+        return sendSuccess(res, 201, 'Testimonial created successfully.', testimonial);
     } catch (err) {
         console.error(err);
         if (err.name === 'ValidationError') {
-            return res.status(400).json({
-                code: 400,
-                status: 'failure',
-                message: err.message
-            });
+            return sendError(res, 400, err.message);
         }
-        return res.status(500).json({
-            code: 500,
-            status: 'failure',
-            message: 'Internal server error'
-        });
+        return sendError(res, 500, 'Internal server error');
     }
 };
+
 const getAll = async (req, res) => {
     try {
         const userId = req.user.userId;
@@ -56,39 +40,23 @@ const getAll = async (req, res) => {
 
         const pageNum = parseInt(page);
         if (isNaN(pageNum) || pageNum < 1) {
-            return res.status(400).json({
-                code: 400,
-                status: 'failure',
-                message: 'Invalid page. Must be a positive integer.'
-            });
+            return sendError(res, 400, 'Invalid page. Must be a positive integer.');
         }
 
         const limitNum = parseInt(limit);
         if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
-            return res.status(400).json({
-                code: 400,
-                status: 'failure',
-                message: 'Invalid limit. Must be between 1 and 100.'
-            });
+            return sendError(res, 400, 'Invalid limit. Must be between 1 and 100.');
         }
 
         const allowedSortFields = ['createdAt', 'updatedAt', 'rating', 'customerName'];
         const sortField = sort.startsWith('-') ? sort.slice(1) : sort;
         if (!allowedSortFields.includes(sortField)) {
-            return res.status(400).json({
-                code: 400,
-                status: 'failure',
-                message: `Invalid sort field. Allowed: ${allowedSortFields.join(', ')}`
-            });
+            return sendError(res, 400, `Invalid sort field. Allowed: ${allowedSortFields.join(', ')}`);
         }
 
         const allowedStatuses = ['draft', 'recording', 'processing', 'completed', 'shared'];
         if (status && !allowedStatuses.includes(status)) {
-            return res.status(400).json({
-                code: 400,
-                status: 'failure',
-                message: `Invalid status. Allowed: ${allowedStatuses.join(', ')}`
-            });
+            return sendError(res, 400, `Invalid status. Allowed: ${allowedStatuses.join(', ')}`);
         }
 
         const filter = { userId, isDeleted: false };
@@ -102,11 +70,7 @@ const getAll = async (req, res) => {
             .limit(safeLimit)
             .lean();
 
-        return res.status(200).json({
-            code: 200,
-            status: 'success',
-            message: 'Data retrieved successfully',
-            data: testimonials,
+        return sendSuccess(res, 200, 'Data retrieved successfully', testimonials, {
             pagination: {
                 total,
                 page: pageNum,
@@ -116,11 +80,7 @@ const getAll = async (req, res) => {
         });
     } catch (err) {
         console.error(err);
-        return res.status(500).json({
-            code: 500,
-            status: 'failure',
-            message: 'Internal server error'
-        });
+        return sendError(res, 500, 'Internal server error');
     }
 };
 
@@ -133,26 +93,13 @@ const getOne = async (req, res) => {
         }).lean();
 
         if (!testimonial) {
-            return res.status(404).json({
-                code: 404,
-                status: 'failure',
-                message: 'Testimonial not found'
-            });
+            return sendError(res, 404, 'Testimonial not found');
         }
 
-        return res.status(200).json({
-            code: 200,
-            status: 'success',
-            message: 'Testimonial retrieved',
-            data: testimonial
-        });
+        return sendSuccess(res, 200, 'Testimonial retrieved', testimonial);
     } catch (err) {
         console.error(err);
-        return res.status(500).json({
-            code: 500,
-            status: 'failure',
-            message: 'Internal server error'
-        });
+        return sendError(res, 500, 'Internal server error');
     }
 };
 
@@ -165,11 +112,7 @@ const update = async (req, res) => {
         });
 
         if (!testimonial) {
-            return res.status(404).json({
-                code: 404,
-                status: 'failure',
-                message: 'Testimonial not found'
-            });
+            return sendError(res, 404, 'Testimonial not found');
         }
 
         const allowedUpdates = ['customerName', 'customerEmail', 'customerPhone', 'videoUrl', 'rating', 'text', 'consentGiven'];
@@ -181,24 +124,13 @@ const update = async (req, res) => {
 
         await testimonial.save();
 
-        return res.status(200).json({
-            code: 200,
-            status: 'success',
-            message: 'Testimonial updated',
-            data: testimonial
-        });
+        return sendSuccess(res, 200, 'Testimonial updated', testimonial);
     } catch (err) {
         console.error(err);
         if (err.name === 'ValidationError') {
-            return res.status(400).json({
-                code: 400, 
-                status: 'failure', 
-                message: err.message });
+            return sendError(res, 400, err.message);
         }
-        return res.status(500).json({ 
-            code: 500, 
-            status: 'failure', 
-            message: 'Internal server error' });
+        return sendError(res, 500, 'Internal server error');
     }
 };
 
@@ -212,20 +144,12 @@ const updateStatus = async (req, res) => {
         });
 
         if (!testimonial) {
-            return res.status(404).json({
-                code: 404,
-                status: 'failure',
-                message: 'Testimonial not found'
-            });
+            return sendError(res, 404, 'Testimonial not found');
         }
 
         const allowedTransitions = VALID_TRANSITIONS[testimonial.status] || [];
         if (!allowedTransitions.includes(status)) {
-            return res.status(400).json({
-                code: 400,
-                status: 'failure',
-                message: `Cannot transition from ${testimonial.status} to ${status}`
-            });
+            return sendError(res, 400, `Cannot transition from ${testimonial.status} to ${status}`);
         }
 
         testimonial.status = status;
@@ -235,24 +159,13 @@ const updateStatus = async (req, res) => {
 
         await testimonial.save();
 
-        return res.status(200).json({
-            code: 200,
-            status: 'success',
-            message: 'Status updated',
-            data: testimonial
-        });
+        return sendSuccess(res, 200, 'Status updated', testimonial);
     } catch (err) {
         console.error(err);
         if (err.name === 'ValidationError') {
-            return res.status(400).json({ 
-                code: 400, 
-                status: 'failure', 
-                message: err.message });
+            return sendError(res, 400, err.message);
         }
-        return res.status(500).json({ 
-            code: 500, 
-            status: 'failure', 
-            message: 'Internal server error' });
+        return sendError(res, 500, 'Internal server error');
     }
 };
 
@@ -265,28 +178,17 @@ const remove = async (req, res) => {
         });
 
         if (!testimonial) {
-            return res.status(404).json({
-                code: 404,
-                status: 'failure',
-                message: 'Testimonial not found'
-            });
+            return sendError(res, 404, 'Testimonial not found');
         }
 
         testimonial.isDeleted = true;
         testimonial.deletedAt = new Date();
         await testimonial.save();
 
-        return res.status(200).json({
-            code: 200,
-            status: 'success',
-            message: 'Testimonial deleted'
-        });
+        return sendSuccess(res, 200, 'Testimonial deleted');
     } catch (err) {
         console.error(err);
-        return res.status(500).json({ 
-            code: 500, status: 
-            'failure', message: 
-            'Internal server error' });
+        return sendError(res, 500, 'Internal server error');
     }
 };
 
@@ -295,20 +197,12 @@ const share = async (req, res) => {
         const { channels } = req.body;
 
         if (!channels || !Array.isArray(channels) || channels.length === 0) {
-            return res.status(400).json({
-                code: 400,
-                status: 'failure',
-                message: 'Channels are required and must be a non-empty array'
-            });
+            return sendError(res, 400, 'Channels are required and must be a non-empty array');
         }
 
         const invalidChannels = channels.filter(ch => !SHARE_CHANNELS.includes(ch));
         if (invalidChannels.length > 0) {
-            return res.status(400).json({
-                code: 400,
-                status: 'failure',
-                message: `Invalid channel(s): ${invalidChannels.join(', ')}`
-            });
+            return sendError(res, 400, `Invalid channel(s): ${invalidChannels.join(', ')}`);
         }
 
         const testimonial = await Testimonial.findOne({
@@ -318,11 +212,7 @@ const share = async (req, res) => {
         });
 
         if (!testimonial) {
-            return res.status(404).json({
-                code: 404,
-                status: 'failure',
-                message: 'Testimonial not found'
-            });
+            return sendError(res, 404, 'Testimonial not found');
         }
 
         if (testimonial.status === 'completed') {
@@ -341,59 +231,34 @@ const share = async (req, res) => {
 
         await testimonial.save();
 
-        return res.status(200).json({
-            code: 200,
-            status: 'success',
-            message: 'Testimonial shared successfully',
-            data: testimonial
-        });
+        return sendSuccess(res, 200, 'Testimonial shared successfully', testimonial);
     } catch (err) {
         console.error(err);
         if (err.name === 'ValidationError') {
-            return res.status(400).json({ 
-                code: 400, 
-                status: 'failure', 
-                message: err.message });
+            return sendError(res, 400, err.message);
         }
-        return res.status(500).json({ 
-            code: 500, 
-            status: 'failure', 
-            message: 'Internal server error' });
+        return sendError(res, 500, 'Internal server error');
     }
 };
 
 const getSettings = async (req, res) => {
-    try{
+    try {
         const userId = req.user.userId;
-        const settings = await TestimonialSettings.findOne({userId})
-        if(!settings) return res.status(200).json({
-            code: 200,
-            status: "success",
-            message: "No settings found", 
-            data: null
-        })
-        return res.status(200).json({
-            code: 200,
-            status: "success",
-            message: "Data retrieved successfully",
-            data: settings
-        })
-    } catch(err){
-        console.error(err)
-        if (err.name === 'ValidationError') {
-            return res.status(400).json({
-                code: 400,
-                status: 'failure',
-                message: err.message
-            });
+        const settings = await TestimonialSettings.findOne({ userId });
+
+        if (!settings) {
+            return sendSuccess(res, 200, 'No settings found', null);
         }
-        return res.status(500).json({
-            code: 500,
-            status: 'failure',
-            message: 'Internal server error'
-        });
+
+        return sendSuccess(res, 200, 'Data retrieved successfully', settings);
+    } catch (err) {
+        console.error(err);
+        if (err.name === 'ValidationError') {
+            return sendError(res, 400, err.message);
+        }
+        return sendError(res, 500, 'Internal server error');
     }
-}
+};
 
 const updateSettings = async (req, res) => {
     try {
@@ -406,30 +271,27 @@ const updateSettings = async (req, res) => {
             if (req.body[field] !== undefined) updateData[field] = req.body[field];
         });
 
+        // Валидация sendingOptions, если переданы
+        if (updateData.sendingOptions) {
+            if (!Array.isArray(updateData.sendingOptions) ||
+                !updateData.sendingOptions.every(opt => ['email', 'sms'].includes(opt))) {
+                return sendError(res, 400, 'sendingOptions must be an array containing only "email" and/or "sms"');
+            }
+        }
+
         const settings = await TestimonialSettings.findOneAndUpdate(
             { userId: req.user.userId },
             { $set: updateData },
             { new: true, runValidators: true, upsert: true }
         );
 
-        return res.status(200).json({
-            code: 200,
-            status: 'success',
-            message: 'Settings saved',
-            data: settings
-        });
+        return sendSuccess(res, 200, 'Settings saved', settings);
     } catch (err) {
         console.error(err);
         if (err.name === 'ValidationError') {
-            return res.status(400).json({ 
-                code: 400, 
-                status: 'failure', 
-                message: err.message });
+            return sendError(res, 400, err.message);
         }
-        return res.status(500).json({ 
-            code: 500, 
-            status: 'failure', 
-            message: 'Internal server error' });
+        return sendError(res, 500, 'Internal server error');
     }
 };
 
@@ -439,16 +301,10 @@ const getAnalytics = async (req, res) => {
         const { startDate, endDate } = req.query;
 
         if (startDate && isNaN(Date.parse(startDate))) {
-            return res.status(400).json({
-                code: 400, 
-                status: 'failure', 
-                message: 'Invalid startDate' });
+            return sendError(res, 400, 'Invalid startDate');
         }
         if (endDate && isNaN(Date.parse(endDate))) {
-            return res.status(400).json({ 
-                code: 400, 
-                status: 'failure', 
-                message: 'Invalid endDate' });
+            return sendError(res, 400, 'Invalid endDate');
         }
 
         const match = { userId, isDeleted: false };
@@ -510,20 +366,10 @@ const getAnalytics = async (req, res) => {
             }
         };
 
-        return res.status(200).json({
-            code: 200,
-            status: 'success',
-            message: 'Data retrieved successfully',
-            data
-        });
-
+        return sendSuccess(res, 200, 'Data retrieved successfully', data);
     } catch (err) {
         console.error(err);
-        return res.status(500).json({
-            code: 500,
-            status: 'failure',
-            message: 'Internal server error'
-        });
+        return sendError(res, 500, 'Internal server error');
     }
 };
 

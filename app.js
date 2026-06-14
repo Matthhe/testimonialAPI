@@ -1,8 +1,10 @@
 require('dotenv').config();
 const express = require('express');
-const helmet = require('helmet')
-const cors = require('cors')
+const helmet = require('helmet');
+const cors = require('cors');
 const mongoose = require('mongoose');
+const { sendError } = require('./lib/response');
+
 const app = express();
 
 if (!process.env.JWT_SECRET) {
@@ -23,20 +25,16 @@ if (!process.env.MONGODB_URI) {
     process.exit(1);
 }
 
-app.use(helmet())
-app.use(cors())
+app.use(helmet());
+app.use(cors());
 app.use(express.json({ limit: '10kb' }));
 
-app.use('/api/auth', require('./routes/authRoute'))
+app.use('/api/auth', require('./routes/authRoute'));
 app.use('/api/testimonials', require('./routes/testimonialRoute'));
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).json({
-        code: 500,
-        status: 'failure',
-        message: 'Internal server error'
-    });
+    sendError(res, 500, 'Internal server error');
 });
 
 const PORT = process.env.PORT || 3000;
