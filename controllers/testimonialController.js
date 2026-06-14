@@ -23,6 +23,7 @@ const create = async (req, res) => {
             if (req.body[field] !== undefined) data[field] = req.body[field];
         });
 
+        const testimonial = new Testimonial(data); 
         await testimonial.save();
 
         return res.status(201).json({
@@ -124,32 +125,28 @@ const getAll = async (req, res) => {
 };
 
 const getOne = async (req, res) => {
-    try{
-        const userId = req.user.userId
-        const testimonialId = req.params.testimonialId
-        const testimonial = await Testimonial.findOne({testimonialId, isDeleted: false})
+    try {
+        const testimonial = await Testimonial.findOne({
+            testimonialId: req.params.testimonialId,
+            userId: req.user.userId,
+            isDeleted: false
+        }).lean();
 
-        if(!testimonial) return res.status(404).json({
-            code: 404,
-            status: "failure", 
-            message: "Testimonial not found"
-        })
-
-        if(testimonial.userId !== userId) return res.status(403).json({
-            code: 403,
-            status: "failure",
-            message: "Forbidden"
-        })
+        if (!testimonial) {
+            return res.status(404).json({
+                code: 404,
+                status: 'failure',
+                message: 'Testimonial not found'
+            });
+        }
 
         return res.status(200).json({
             code: 200,
-            status: "success",
-            message: "Testimonial retrieved",
+            status: 'success',
+            message: 'Testimonial retrieved',
             data: testimonial
-        })
-        
-    }
-    catch(err){
+        });
+    } catch (err) {
         console.error(err);
         return res.status(500).json({
             code: 500,
@@ -157,42 +154,40 @@ const getOne = async (req, res) => {
             message: 'Internal server error'
         });
     }
-}
+};
 
 const update = async (req, res) => {
-    try{
-        const userId = req.user.userId
-        const testimonialId = req.params.testimonialId
-        const testimonial = await Testimonial.findOne({testimonialId, isDeleted: false})
-        
-        if(!testimonial) return res.status(404).json({
-            code: 404,
-            status: "failure", 
-            message: "Testimonial not found"
-        })
+    try {
+        const testimonial = await Testimonial.findOne({
+            testimonialId: req.params.testimonialId,
+            userId: req.user.userId,
+            isDeleted: false
+        });
 
-        if(testimonial.userId !== userId) return res.status(403).json({
-            code: 403,
-            status: "failure",
-            message: "Forbidden"
-        })
+        if (!testimonial) {
+            return res.status(404).json({
+                code: 404,
+                status: 'failure',
+                message: 'Testimonial not found'
+            });
+        }
 
         const allowedUpdates = ['customerName', 'customerEmail', 'customerPhone', 'videoUrl', 'rating', 'text', 'consentGiven'];
-            allowedUpdates.forEach(field => {
-                if (req.body[field] !== undefined) {
-                    testimonial[field] = req.body[field];
-                }
+        allowedUpdates.forEach(field => {
+            if (req.body[field] !== undefined) {
+                testimonial[field] = req.body[field];
+            }
         });
-        await testimonial.save()
+
+        await testimonial.save();
 
         return res.status(200).json({
             code: 200,
-            status: "success",
-            message: "Testimonial updated",
+            status: 'success',
+            message: 'Testimonial updated',
             data: testimonial
-        })
-    }
-    catch(err){
+        });
+    } catch (err) {
         console.error(err);
         if (err.name === 'ValidationError') {
             return res.status(400).json({
@@ -200,88 +195,80 @@ const update = async (req, res) => {
                 status: 'failure', 
                 message: err.message });
         }
-            return res.status(500).json({
-                code: 500,
-                status: 'failure',
-                message: 'Internal server error'
-            });
+        return res.status(500).json({ 
+            code: 500, 
+            status: 'failure', 
+            message: 'Internal server error' });
     }
-}
+};
 
 const updateStatus = async (req, res) => {
-    try{
-        const status = req.body.status
-        const userId = req.user.userId;
-        const testimonialId = req.params.testimonialId
-        const testimonial = await Testimonial.findOne({testimonialId, isDeleted: false})
-        if(!testimonial){
+    try {
+        const { status } = req.body;
+        const testimonial = await Testimonial.findOne({
+            testimonialId: req.params.testimonialId,
+            userId: req.user.userId,
+            isDeleted: false
+        });
+
+        if (!testimonial) {
             return res.status(404).json({
                 code: 404,
-                status: "failure", 
-                message: "Testimonial not found"
-            })
+                status: 'failure',
+                message: 'Testimonial not found'
+            });
         }
-        if(testimonial.userId !== userId) return res.status(403).json({
-                code: 403,
-                status: "failure",
-                message: "Forbidden"
-        })
 
-        if(!status) return res.status(400).json({
-            code: 400,
-            status: "failure",
-            message: "Status is required"
-        })
-
-        const allowedTransitions = VALID_TRANSITIONS[testimonial.status]
-        if(!allowedTransitions || !allowedTransitions.includes(status)){
+        const allowedTransitions = VALID_TRANSITIONS[testimonial.status] || [];
+        if (!allowedTransitions.includes(status)) {
             return res.status(400).json({
                 code: 400,
-                status: "failure",
+                status: 'failure',
                 message: `Cannot transition from ${testimonial.status} to ${status}`
-            })
+            });
         }
+
         testimonial.status = status;
-            if (status === 'shared') {
-                testimonial.sharedAt = new Date();
-            }
+        if (status === 'shared') {
+            testimonial.sharedAt = new Date();
+        }
+
         await testimonial.save();
-        return res.status(200).json({ code: 200, status: 'success', message: 'Status updated', data: testimonial });
-    }
-    catch(err){
-        console.error(err)
+
+        return res.status(200).json({
+            code: 200,
+            status: 'success',
+            message: 'Status updated',
+            data: testimonial
+        });
+    } catch (err) {
+        console.error(err);
         if (err.name === 'ValidationError') {
-            return res.status(400).json({
+            return res.status(400).json({ 
                 code: 400, 
                 status: 'failure', 
                 message: err.message });
         }
-
-        return res.status(500).json({
-                code: 500,
-                status: 'failure',
-                message: 'Internal server error'
-        });
+        return res.status(500).json({ 
+            code: 500, 
+            status: 'failure', 
+            message: 'Internal server error' });
     }
-}
+};
 
 const remove = async (req, res) => {
-    try{
-        const userId = req.user.userId
-        const testimonialId = req.params.testimonialId
-        const testimonial = await Testimonial.findOne({testimonialId, isDeleted: false})
-        if(!testimonial){
+    try {
+        const testimonial = await Testimonial.findOne({
+            testimonialId: req.params.testimonialId,
+            userId: req.user.userId,
+            isDeleted: false
+        });
+
+        if (!testimonial) {
             return res.status(404).json({
                 code: 404,
-                status: "failure", 
-                message: "Testimonial not found"
-            })
-        }
-        if (testimonial.userId !== userId) {
-            return res.status(403).json({
-                code: 403,
                 status: 'failure',
-                message: 'Forbidden'
+                message: 'Testimonial not found'
             });
         }
 
@@ -294,21 +281,17 @@ const remove = async (req, res) => {
             status: 'success',
             message: 'Testimonial deleted'
         });
-
     } catch (err) {
         console.error(err);
-        return res.status(500).json({
-            code: 500,
-            status: 'failure',
-            message: 'Internal server error'
-        });
+        return res.status(500).json({ 
+            code: 500, status: 
+            'failure', message: 
+            'Internal server error' });
     }
-}
+};
 
 const share = async (req, res) => {
     try {
-        const userId = req.user.userId;
-        const testimonialId = req.params.testimonialId;
         const { channels } = req.body;
 
         if (!channels || !Array.isArray(channels) || channels.length === 0) {
@@ -328,20 +311,17 @@ const share = async (req, res) => {
             });
         }
 
-        const testimonial = await Testimonial.findOne({ testimonialId, isDeleted: false });
+        const testimonial = await Testimonial.findOne({
+            testimonialId: req.params.testimonialId,
+            userId: req.user.userId,
+            isDeleted: false
+        });
+
         if (!testimonial) {
             return res.status(404).json({
                 code: 404,
                 status: 'failure',
                 message: 'Testimonial not found'
-            });
-        }
-
-        if (testimonial.userId !== userId) {
-            return res.status(403).json({
-                code: 403,
-                status: 'failure',
-                message: 'Forbidden'
             });
         }
 
@@ -367,21 +347,18 @@ const share = async (req, res) => {
             message: 'Testimonial shared successfully',
             data: testimonial
         });
-
     } catch (err) {
         console.error(err);
         if (err.name === 'ValidationError') {
-            return res.status(400).json({
-                code: 400,
-                status: 'failure',
-                message: err.message
-            });
+            return res.status(400).json({ 
+                code: 400, 
+                status: 'failure', 
+                message: err.message });
         }
-        return res.status(500).json({
-            code: 500,
-            status: 'failure',
-            message: 'Internal server error'
-        });
+        return res.status(500).json({ 
+            code: 500, 
+            status: 'failure', 
+            message: 'Internal server error' });
     }
 };
 
@@ -420,14 +397,19 @@ const getSettings = async (req, res) => {
 
 const updateSettings = async (req, res) => {
     try {
-        const userId = req.user.userId;
-
-        delete req.body.userId;
+        const allowedFields = [
+            'isEnabled', 'defaultVideoLength', 'videoLengthOptions',
+            'questionnaire', 'sendingOptions', 'thankYouMessage', 'contactConsent'
+        ];
+        const updateData = {};
+        allowedFields.forEach(field => {
+            if (req.body[field] !== undefined) updateData[field] = req.body[field];
+        });
 
         const settings = await TestimonialSettings.findOneAndUpdate(
-            { userId },
-            { $set: req.body },
-            { upsert: true, new: true, runValidators: true }
+            { userId: req.user.userId },
+            { $set: updateData },
+            { new: true, runValidators: true, upsert: true }
         );
 
         return res.status(200).json({
@@ -436,21 +418,18 @@ const updateSettings = async (req, res) => {
             message: 'Settings saved',
             data: settings
         });
-
     } catch (err) {
         console.error(err);
         if (err.name === 'ValidationError') {
-            return res.status(400).json({
-                code: 400,
-                status: 'failure',
-                message: err.message
-            });
+            return res.status(400).json({ 
+                code: 400, 
+                status: 'failure', 
+                message: err.message });
         }
-        return res.status(500).json({
-            code: 500,
-            status: 'failure',
-            message: 'Internal server error'
-        });
+        return res.status(500).json({ 
+            code: 500, 
+            status: 'failure', 
+            message: 'Internal server error' });
     }
 };
 
@@ -458,6 +437,19 @@ const getAnalytics = async (req, res) => {
     try {
         const userId = req.user.userId;
         const { startDate, endDate } = req.query;
+
+        if (startDate && isNaN(Date.parse(startDate))) {
+            return res.status(400).json({
+                code: 400, 
+                status: 'failure', 
+                message: 'Invalid startDate' });
+        }
+        if (endDate && isNaN(Date.parse(endDate))) {
+            return res.status(400).json({ 
+                code: 400, 
+                status: 'failure', 
+                message: 'Invalid endDate' });
+        }
 
         const match = { userId, isDeleted: false };
 
