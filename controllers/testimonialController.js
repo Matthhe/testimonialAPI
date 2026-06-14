@@ -1,5 +1,4 @@
 const Testimonial = require('../models/testimonial')
-const User = require('../models/user')
 const TestimonialSettings = require('../models/testimonialSettings');
 const {VALID_TRANSITIONS, SHARE_CHANNELS} = require('../lib/constants')
 
@@ -54,17 +53,53 @@ const getAll = async (req, res) => {
         const userId = req.user.userId;
         const { status, page = 1, limit = 10, sort = '-createdAt' } = req.query;
 
+        const pageNum = parseInt(page);
+        if (isNaN(pageNum) || pageNum < 1) {
+            return res.status(400).json({
+                code: 400,
+                status: 'failure',
+                message: 'Invalid page. Must be a positive integer.'
+            });
+        }
+
+        const limitNum = parseInt(limit);
+        if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+            return res.status(400).json({
+                code: 400,
+                status: 'failure',
+                message: 'Invalid limit. Must be between 1 and 100.'
+            });
+        }
+
+        const allowedSortFields = ['createdAt', 'updatedAt', 'rating', 'customerName'];
+        const sortField = sort.startsWith('-') ? sort.slice(1) : sort;
+        if (!allowedSortFields.includes(sortField)) {
+            return res.status(400).json({
+                code: 400,
+                status: 'failure',
+                message: `Invalid sort field. Allowed: ${allowedSortFields.join(', ')}`
+            });
+        }
+
+        const allowedStatuses = ['draft', 'recording', 'processing', 'completed', 'shared'];
+        if (status && !allowedStatuses.includes(status)) {
+            return res.status(400).json({
+                code: 400,
+                status: 'failure',
+                message: `Invalid status. Allowed: ${allowedStatuses.join(', ')}`
+            });
+        }
+
         const filter = { userId, isDeleted: false };
         if (status) filter.status = status;
 
-        const pageNum = parseInt(page);
-        const limitNum = parseInt(limit);
+        const safeLimit = Math.min(limitNum, 100);
         const total = await Testimonial.countDocuments(filter);
-
         const testimonials = await Testimonial.find(filter)
             .sort(sort)
-            .skip((pageNum - 1) * limitNum)
-            .limit(limitNum);
+            .skip((pageNum - 1) * safeLimit)
+            .limit(safeLimit)
+            .lean();
 
         return res.status(200).json({
             code: 200,
@@ -74,8 +109,8 @@ const getAll = async (req, res) => {
             pagination: {
                 total,
                 page: pageNum,
-                limit: limitNum,
-                pages: Math.ceil(total / limitNum)
+                limit: safeLimit,
+                pages: Math.ceil(total / safeLimit)
             }
         });
     } catch (err) {
