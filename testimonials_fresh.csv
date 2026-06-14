@@ -1,0 +1,7 @@
+"testimonialId","customerName","customerEmail","customerPhone","videoUrl","rating","text","status","consentGiven","sharedAt","sharedChannels","createdAt","updatedAt"
+"57bd4f60-e718-4ccd-b42b-79b02b75a233","Charlie","charlie@mail.com","+1234567890","https://example.com/video.mp4",4,"Good!","draft",false,,"[]","2026-06-14T16:31:51.270Z","2026-06-14T16:31:51.270Z"
+"d818fea6-7184-4222-9eeb-22818c18c873","Charlie","charlie@mail.com","+1234567890","https://example.com/video.mp4",4,"Good!","draft",false,,"[]","2026-06-14T16:30:38.024Z","2026-06-14T16:30:38.024Z"
+"447e5946-aa9d-4ed4-85cb-a5365c3a3e4e","Charlie","charlie@mail.com","+1234567890","https://example.com/video.mp4",4,"Good!","draft",false,,"[]","2026-06-14T16:30:20.655Z","2026-06-14T16:30:20.655Z"
+"85de5051-0150-42d9-9ec8-d1d906e423e1","Bob???","bob@mail.com","+123456789","https://example.com/video.mp4",4,"Nice!","draft",false,,"[]","2026-06-14T16:28:20.567Z","2026-06-14T16:28:20.567Z"
+"c08b418f-84fe-4882-9a29-474dec10ec6a","Bob","bob@mail.com","+123456789","https://example.com/video.mp4",4,"Nice!","draft",false,,"[]","2026-06-14T16:27:48.943Z","2026-06-14T16:27:48.943Z"
+"c3f94e5f-0a9a-4ed2-b407-219e848b5cd9","Bob",,,,3,"Okay","shared",false,"2026-06-05T11:20:31.734Z","[""email"",""facebook""]","2026-06-05T11:17:25.312Z","2026-06-05T11:20:31.738Z"

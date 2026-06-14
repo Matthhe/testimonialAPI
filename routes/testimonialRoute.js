@@ -11,6 +11,7 @@ router.get('/analytics', testimonialController.getAnalytics);
 
 router.post('/', testimonialController.create);
 router.get('/', testimonialController.getAll);
+router.get('/export', testimonialController.exportCSV);
 router.get('/:testimonialId', testimonialController.getOne);
 router.put('/:testimonialId', testimonialController.update);
 router.patch('/:testimonialId/status', testimonialController.updateStatus);

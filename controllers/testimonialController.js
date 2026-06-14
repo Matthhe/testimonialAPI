@@ -2,6 +2,7 @@ const Testimonial = require('../models/testimonial')
 const TestimonialSettings = require('../models/testimonialSettings');
 const { VALID_TRANSITIONS, SHARE_CHANNELS } = require('../lib/constants')
 const { sendSuccess, sendError } = require('../lib/response')
+const { Parser } = require('json2csv')
 
 const create = async (req, res) => {
     try {
@@ -271,7 +272,6 @@ const updateSettings = async (req, res) => {
             if (req.body[field] !== undefined) updateData[field] = req.body[field];
         });
 
-        // Валидация sendingOptions, если переданы
         if (updateData.sendingOptions) {
             if (!Array.isArray(updateData.sendingOptions) ||
                 !updateData.sendingOptions.every(opt => ['email', 'sms'].includes(opt))) {
@@ -373,4 +373,43 @@ const getAnalytics = async (req, res) => {
     }
 };
 
-module.exports = { create, getAll, getOne, update, updateStatus, remove, share, getSettings, updateSettings, getAnalytics };
+const exportCSV = async (req, res) => {
+    try {
+        const fields = [
+            'testimonialId',
+            'customerName',
+            'customerEmail',
+            'customerPhone',
+            'videoUrl',
+            'rating',
+            'text',
+            'status',
+            'consentGiven',
+            'sharedAt',
+            'sharedChannels',
+            'createdAt',
+            'updatedAt'
+        ];
+
+        const userId = req.user.userId;
+        const filter = { userId, isDeleted: false };
+
+        const testimonials = await Testimonial.find(filter).sort({ createdAt: -1 }).lean();
+
+        if (!testimonials.length) {
+            return sendError(res, 404, 'No testimonials to export');
+        }
+
+        const parser = new Parser({fields: fields})
+        const csv = parser.parse(testimonials)
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename="testimonials.csv"');
+        return res.send(csv);
+    } catch (err) {
+        console.error(err);
+        return sendError(res, 500, 'Internal server error');
+    }
+}
+
+module.exports = { create, getAll, getOne, update, updateStatus, remove, share, getSettings, updateSettings, getAnalytics, exportCSV };

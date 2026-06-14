@@ -1,0 +1,2 @@
+testimonialId,customerName,customerEmail,customerPhone,videoUrl,rating,text,status,consentGiven,sharedAt,sharedChannels,createdAt,updatedAt
+c3f94e5f-0a9a-4ed2-b407-219e848b5cd9,Bob,,,,3,Okay,shared,false,2026-06-05T11:20:31.734Z,"[""email"",""facebook""]",2026-06-05T11:17:25.312Z,2026-06-05T11:20:31.738Z
