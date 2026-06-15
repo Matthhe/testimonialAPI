@@ -5,17 +5,19 @@ const verifyJWT = require('../middleware/auth');
 
 router.use(verifyJWT);
 
-router.get('/settings', testimonialController.getSettings);
-router.post('/settings', testimonialController.updateSettings);
-router.get('/analytics', testimonialController.getAnalytics);
+const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
-router.post('/', testimonialController.create);
-router.get('/', testimonialController.getAll);
-router.get('/export', testimonialController.exportCSV);
-router.get('/:testimonialId', testimonialController.getOne);
-router.put('/:testimonialId', testimonialController.update);
-router.patch('/:testimonialId/status', testimonialController.updateStatus);
-router.delete('/:testimonialId', testimonialController.remove);
-router.post('/:testimonialId/share', testimonialController.share);
+router.get('/settings', asyncHandler(testimonialController.getSettings));
+router.post('/settings', asyncHandler(testimonialController.updateSettings));
+router.get('/analytics', asyncHandler(testimonialController.getAnalytics));
+
+router.post('/', asyncHandler(testimonialController.create));
+router.get('/', asyncHandler(testimonialController.getAll));
+router.get('/export', asyncHandler(testimonialController.exportCSV));
+router.get('/:testimonialId', asyncHandler(testimonialController.getOne));
+router.put('/:testimonialId', asyncHandler(testimonialController.update));
+router.patch('/:testimonialId/status', asyncHandler(testimonialController.updateStatus));
+router.delete('/:testimonialId', asyncHandler(testimonialController.remove));
+router.post('/:testimonialId/share', asyncHandler(testimonialController.share));
 
 module.exports = router;
