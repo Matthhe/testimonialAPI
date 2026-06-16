@@ -407,7 +407,22 @@ const exportCSV = async (req, res) => {
         ];
 
         const userId = req.user.userId;
+        const { status, startDate, endDate } = req.query;
+
+        if (startDate && isNaN(Date.parse(startDate))) {
+            return sendError(res, 400, 'Invalid startDate');
+        }
+        if (endDate && isNaN(Date.parse(endDate))) {
+            return sendError(res, 400, 'Invalid endDate');
+        }
+
         const filter = { userId, isDeleted: false };
+        if (status) filter.status = status;
+        if (startDate || endDate) {
+            filter.createdAt = {};
+            if (startDate) filter.createdAt.$gte = new Date(startDate);
+            if (endDate) filter.createdAt.$lte = new Date(endDate);
+        }
 
         const testimonials = await Testimonial.find(filter).sort({ createdAt: -1 }).lean();
 
@@ -415,8 +430,8 @@ const exportCSV = async (req, res) => {
             return sendError(res, 404, 'No testimonials to export');
         }
 
-        const parser = new Parser({fields: fields})
-        const csv = parser.parse(testimonials)
+        const parser = new Parser({ fields });
+        const csv = parser.parse(testimonials);
 
         res.setHeader('Content-Type', 'text/csv');
         res.setHeader('Content-Disposition', 'attachment; filename="testimonials.csv"');
@@ -425,7 +440,7 @@ const exportCSV = async (req, res) => {
         console.error(err);
         return sendError(res, 500, 'Internal server error');
     }
-}
+};
 
 const search = async (req, res) => {
     try {
