@@ -89,12 +89,15 @@ const getOne = async (req, res) => {
     try {
         const testimonial = await Testimonial.findOne({
             testimonialId: req.params.testimonialId,
-            userId: req.user.userId,
             isDeleted: false
         }).lean();
 
         if (!testimonial) {
             return sendError(res, 404, 'Testimonial not found');
+        }
+
+        if (testimonial.userId !== req.user.userId) {
+            return sendError(res, 403, 'Forbidden');
         }
 
         return sendSuccess(res, 200, 'Testimonial retrieved', testimonial);
@@ -108,12 +111,15 @@ const update = async (req, res) => {
     try {
         const testimonial = await Testimonial.findOne({
             testimonialId: req.params.testimonialId,
-            userId: req.user.userId,
             isDeleted: false
         });
 
         if (!testimonial) {
             return sendError(res, 404, 'Testimonial not found');
+        }
+
+        if (testimonial.userId !== req.user.userId) {
+            return sendError(res, 403, 'Forbidden');
         }
 
         const allowedUpdates = ['customerName', 'customerEmail', 'customerPhone', 'videoUrl', 'rating', 'text', 'consentGiven'];
@@ -140,12 +146,15 @@ const updateStatus = async (req, res) => {
         const { status } = req.body;
         const testimonial = await Testimonial.findOne({
             testimonialId: req.params.testimonialId,
-            userId: req.user.userId,
             isDeleted: false
         });
 
         if (!testimonial) {
             return sendError(res, 404, 'Testimonial not found');
+        }
+
+        if (testimonial.userId !== req.user.userId) {
+            return sendError(res, 403, 'Forbidden');
         }
 
         const allowedTransitions = VALID_TRANSITIONS[testimonial.status] || [];
@@ -174,12 +183,15 @@ const remove = async (req, res) => {
     try {
         const testimonial = await Testimonial.findOne({
             testimonialId: req.params.testimonialId,
-            userId: req.user.userId,
             isDeleted: false
         });
 
         if (!testimonial) {
             return sendError(res, 404, 'Testimonial not found');
+        }
+
+        if (testimonial.userId !== req.user.userId) {
+            return sendError(res, 403, 'Forbidden');
         }
 
         testimonial.isDeleted = true;
@@ -208,12 +220,15 @@ const share = async (req, res) => {
 
         const testimonial = await Testimonial.findOne({
             testimonialId: req.params.testimonialId,
-            userId: req.user.userId,
             isDeleted: false
         });
 
         if (!testimonial) {
             return sendError(res, 404, 'Testimonial not found');
+        }
+
+        if (testimonial.userId !== req.user.userId) {
+            return sendError(res, 403, 'Forbidden');
         }
 
         if (testimonial.status === 'completed') {

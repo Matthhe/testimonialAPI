@@ -9,7 +9,7 @@ let token;
 let testimonialId;
 
 beforeAll(async () => {
-    process.env.NODE_ENV = 'test'; // <-- добавить
+    process.env.NODE_ENV = 'test'; 
     mongoServer = await MongoMemoryServer.create();
     process.env.MONGODB_URI = mongoServer.getUri();
     process.env.JWT_SECRET = 'test-secret-key';
@@ -141,6 +141,20 @@ describe('Testimonials CRUD', () => {
         expect(shareRes2.body.data.sharedAt).toEqual(firstShareDate);
     });
 
+    it('should not access other user testimonial (returns 403)', async () => {
+        const uniqueEmail = `other_${Date.now()}@test.com`;
+        const regRes = await request(app)
+            .post('/api/auth/register')
+            .send({ email: uniqueEmail, password: 'abcdef', businessName: 'Other' });
+        expect(regRes.status).toBe(201);
+        const otherToken = regRes.body.data.token;
+
+        const res = await request(app)
+            .get(`/api/testimonials/${testimonialId}`)
+            .set('Authorization', `Bearer ${otherToken}`);
+        expect(res.status).toBe(403);
+    });
+
     it('should soft delete testimonial', async () => {
         const res = await request(app)
             .delete(`/api/testimonials/${testimonialId}`)
@@ -152,20 +166,6 @@ describe('Testimonials CRUD', () => {
             .set('Authorization', `Bearer ${token}`);
         expect(getRes.status).toBe(404);
     });
-
-    it('should not access other user testimonial (returns 404)', async () => {
-    const uniqueEmail = `other_${Date.now()}@test.com`;
-    const regRes = await request(app)
-        .post('/api/auth/register')
-        .send({ email: uniqueEmail, password: 'abcdef', businessName: 'Other' });
-    expect(regRes.status).toBe(201);
-    const otherToken = regRes.body.data.token;
-
-    const res = await request(app)
-        .get(`/api/testimonials/${testimonialId}`)
-        .set('Authorization', `Bearer ${otherToken}`);
-    expect(res.status).toBe(404);
-});
 });
 
 describe('Analytics', () => {
