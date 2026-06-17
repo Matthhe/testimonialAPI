@@ -289,9 +289,9 @@ const updateSettings = async (req, res) => {
 
         if (updateData.sendingOptions) {
             if (!Array.isArray(updateData.sendingOptions) ||
-                !updateData.sendingOptions.every(opt => ['email', 'sms'].includes(opt))) {
-                return sendError(res, 400, 'sendingOptions must be an array containing only "email" and/or "sms"');
-            }
+                !updateData.sendingOptions.every(opt => SHARE_CHANNELS.includes(opt))) {
+                    return sendError(res, 400, `sendingOptions must be an array containing only: ${SHARE_CHANNELS.join(', ')}`);
+                }
         }
 
         const settings = await TestimonialSettings.findOneAndUpdate(
