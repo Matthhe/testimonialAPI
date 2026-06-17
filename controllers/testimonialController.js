@@ -532,4 +532,58 @@ const search = async (req, res) => {
     }
 };
 
-module.exports = { create, getAll, getOne, update, updateStatus, remove, share, getSettings, updateSettings, getAnalytics, exportCSV, search };
+const bulkStatus = async (req, res) => {
+    try {
+        const { testimonialIds, status } = req.body;
+
+        if (!testimonialIds || !Array.isArray(testimonialIds) || testimonialIds.length === 0) {
+            return sendError(res, 400, 'testimonialIds must be a non-empty array');
+        }
+        if (!status) {
+            return sendError(res, 400, 'status is required');
+        }
+
+        const allowedStatuses = ['draft', 'recording', 'processing', 'completed', 'shared'];
+        if (!allowedStatuses.includes(status)) {
+            return sendError(res, 400, `Invalid status. Allowed: ${allowedStatuses.join(', ')}`);
+        }
+
+        const testimonials = await Testimonial.find({
+            testimonialId: { $in: testimonialIds },
+            userId: req.user.userId,
+            isDeleted: false
+        });
+
+        const updated = [];
+        const failed = [];
+
+        testimonials.forEach(t => {
+            const allowed = VALID_TRANSITIONS[t.status] || [];
+            if (allowed.includes(status)) {
+                t.status = status;
+                if (status === 'shared') {
+                    t.sharedAt = new Date();
+                }
+                updated.push(t);
+            } else {
+                failed.push({
+                    testimonialId: t.testimonialId,
+                    message: `Cannot transition from ${t.status} to ${status}`
+                });
+            }
+        });
+
+        await Promise.all(updated.map(t => t.save()));
+
+        return sendSuccess(res, 200, 'Bulk status update completed', {
+            updated: updated.length,
+            failed: failed.length,
+            errors: failed
+        });
+    } catch (err) {
+        console.error(err);
+        return sendError(res, 500, 'Internal server error');
+    }
+};
+
+module.exports = { create, getAll, getOne, update, updateStatus, remove, share, getSettings, updateSettings, getAnalytics, exportCSV, search, bulkStatus };

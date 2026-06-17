@@ -15,6 +15,7 @@ router.post('/', asyncHandler(testimonialController.create));
 router.get('/', asyncHandler(testimonialController.getAll));
 router.get('/export', asyncHandler(testimonialController.exportCSV));
 router.get('/search', asyncHandler(testimonialController.search));
+router.post('/bulk/status', asyncHandler(testimonialController.bulkStatus));
 router.get('/:testimonialId', asyncHandler(testimonialController.getOne));
 router.put('/:testimonialId', asyncHandler(testimonialController.update));
 router.patch('/:testimonialId/status', asyncHandler(testimonialController.updateStatus));
