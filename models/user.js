@@ -1,6 +1,6 @@
-const mongoose = require('mongoose')
-const bcrypt = require('bcrypt')
-const {ROLES, DEFAULT_ROLE} = require('../lib/constants')
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+const {ROLES, DEFAULT_ROLE} = require('../lib/constants');
 
 
 const counterSchema = new mongoose.Schema({
@@ -64,20 +64,20 @@ userSchema.pre('save', async function (next) {
 userSchema.pre('save', async function(next){
     if(!this.isModified('password')) return next();
     try{
-        const hashedPwd = await bcrypt.hash(this.password, 10)
+        const hashedPwd = await bcrypt.hash(this.password, 10);
         this.password = hashedPwd;
         next();
     }
     catch(err){
-        next(err)
+        next(err);
     }
 })
 
 //* Compare pwds
 userSchema.methods.comparePassword = async function(userPassword) {
-    return bcrypt.compare(userPassword, this.password)
+    return bcrypt.compare(userPassword, this.password);
 }
 
-const User = mongoose.model("User", userSchema)
+const User = mongoose.model("User", userSchema);
 
 module.exports = User;

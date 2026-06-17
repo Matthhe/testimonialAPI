@@ -1,8 +1,8 @@
-const Testimonial = require('../models/testimonial')
+const Testimonial = require('../models/testimonial');
 const TestimonialSettings = require('../models/testimonialSettings');
-const { VALID_TRANSITIONS, SHARE_CHANNELS } = require('../lib/constants')
-const { sendSuccess, sendError } = require('../lib/response')
-const { Parser } = require('json2csv')
+const { VALID_TRANSITIONS, SHARE_CHANNELS } = require('../lib/constants');
+const { sendSuccess, sendError } = require('../lib/response');
+const { Parser } = require('json2csv');
 
 const create = async (req, res) => {
     try {

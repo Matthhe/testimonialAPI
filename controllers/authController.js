@@ -1,8 +1,8 @@
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken');
-require('dotenv').config()
-const User = require('../models/user')
-const { sendSuccess, sendError } = require('../lib/response')
+require('dotenv').config();
+const User = require('../models/user');
+const { sendSuccess, sendError } = require('../lib/response');
 
 const login = async (req, res) => {
     try {
