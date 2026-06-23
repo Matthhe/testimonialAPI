@@ -657,8 +657,18 @@ const bulkStatus = async (req, res) => {
       isDeleted: false,
     });
 
+    const foundIds = testimonials.map((t) => t.testimonialId);
     const updated = [];
     const failed = [];
+
+    testimonialIds.forEach((id) => {
+      if (!foundIds.includes(id)) {
+        failed.push({
+          testimonialId: id,
+          message: "Testimonial not found or access denied",
+        });
+      }
+    });
 
     testimonials.forEach((t) => {
       const allowed = VALID_TRANSITIONS[t.status] || [];
