@@ -7,26 +7,28 @@ const { sendError } = require("./lib/response");
 
 const app = express();
 
-if (!process.env.JWT_SECRET) {
-  console.error(
-    JSON.stringify({
-      code: 500,
-      status: "failure",
-      message: "FATAL: JWT_SECRET is not defined. Server cannot start.",
-    }),
-  );
-  process.exit(1);
-}
+if (process.env.NODE_ENV !== "test") {
+  if (!process.env.JWT_SECRET) {
+    console.error(
+      JSON.stringify({
+        code: 500,
+        status: "failure",
+        message: "FATAL: JWT_SECRET is not defined. Server cannot start.",
+      }),
+    );
+    process.exit(1);
+  }
 
-if (!process.env.MONGODB_URI) {
-  console.error(
-    JSON.stringify({
-      code: 500,
-      status: "failure",
-      message: "FATAL: MONGODB_URI is not defined. Server cannot start.",
-    }),
-  );
-  process.exit(1);
+  if (!process.env.MONGODB_URI) {
+    console.error(
+      JSON.stringify({
+        code: 500,
+        status: "failure",
+        message: "FATAL: MONGODB_URI is not defined. Server cannot start.",
+      }),
+    );
+    process.exit(1);
+  }
 }
 
 app.use(helmet());
