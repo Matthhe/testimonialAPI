@@ -320,7 +320,7 @@ const share = async (req, res) => {
 const getSettings = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const settings = await TestimonialSettings.findOne({ userId });
+    const settings = await TestimonialSettings.findOne({ userId }).lean();
 
     if (!settings) {
       return sendSuccess(res, 200, "No settings found", null);
