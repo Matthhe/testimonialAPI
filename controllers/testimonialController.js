@@ -258,8 +258,12 @@ const share = async (req, res) => {
       );
     }
 
+    if (new Set(channels).size !== channels.length) {
+      return sendError(res, 400, "Duplicate channels are not allowed");
+    }
+
     const invalidChannels = channels.filter(
-      (ch) => !SHARE_CHANNELS.includes(ch),
+      (ch) => typeof ch !== "string" || !SHARE_CHANNELS.includes(ch),
     );
     if (invalidChannels.length > 0) {
       return sendError(
