@@ -286,6 +286,14 @@ const share = async (req, res) => {
       return sendError(res, 403, "Forbidden");
     }
 
+    if (testimonial.status !== "completed" && testimonial.status !== "shared") {
+      return sendError(
+        res,
+        400,
+        `Cannot share a testimonial in status "${testimonial.status}". Allowed: completed, shared`,
+      );
+    }
+
     if (testimonial.status === "completed") {
       testimonial.status = "shared";
     }
