@@ -17,13 +17,11 @@ beforeAll(async () => {
 
   await mongoose.connect(process.env.MONGODB_URI);
 
-  const res = await request(app)
-    .post("/api/auth/register")
-    .send({
-      email: "test@test.com",
-      password: "123456",
-      businessName: "Test Inc",
-    });
+  const res = await request(app).post("/api/auth/register").send({
+    email: "test@test.com",
+    password: "123456",
+    businessName: "Test Inc",
+  });
   token = res.body.data.token;
 });
 
@@ -34,25 +32,21 @@ afterAll(async () => {
 
 describe("Auth API", () => {
   it("should register a new user", async () => {
-    const res = await request(app)
-      .post("/api/auth/register")
-      .send({
-        email: "new@test.com",
-        password: "abcdef",
-        businessName: "NewBiz",
-      });
+    const res = await request(app).post("/api/auth/register").send({
+      email: "new@test.com",
+      password: "abcdef",
+      businessName: "NewBiz",
+    });
     expect(res.status).toBe(201);
     expect(res.body.data.token).toBeDefined();
   });
 
   it("should reject duplicate email", async () => {
-    const res = await request(app)
-      .post("/api/auth/register")
-      .send({
-        email: "test@test.com",
-        password: "123456",
-        businessName: "Dup",
-      });
+    const res = await request(app).post("/api/auth/register").send({
+      email: "test@test.com",
+      password: "123456",
+      businessName: "Dup",
+    });
     expect(res.status).toBe(400);
     expect(res.body.message).toMatch(/already registered/i);
   });
@@ -66,15 +60,20 @@ describe("Auth API", () => {
   });
 
   it("should reject short password", async () => {
-    const res = await request(app)
-      .post("/api/auth/register")
-      .send({
-        email: "short@test.com",
-        password: "12345",
-        businessName: "Biz",
-      });
+    const res = await request(app).post("/api/auth/register").send({
+      email: "short@test.com",
+      password: "12345",
+      businessName: "Biz",
+    });
     expect(res.status).toBe(400);
     expect(res.body.message).toMatch(/at least 6/i);
+  });
+
+  it("should reject request with invalid token", async () => {
+    const res = await request(app)
+      .get("/api/testimonials")
+      .set("Authorization", "Bearer invalid.token.here");
+    expect(res.status).toBe(401);
   });
 });
 
@@ -110,6 +109,15 @@ describe("Testimonials CRUD", () => {
       .get("/api/testimonials?page=0&limit=200")
       .set("Authorization", `Bearer ${token}`);
     expect(res.status).toBe(400);
+  });
+
+  it("should reject share from draft", async () => {
+    const res = await request(app)
+      .post(`/api/testimonials/${testimonialId}/share`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ channels: ["email"] });
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/cannot share/i);
   });
 
   it("should allow valid status transition", async () => {
