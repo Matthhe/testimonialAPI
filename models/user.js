@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema(
     userId: {
       type: Number,
       unique: true,
+      required: [true, "userId is required"],
     },
     email: {
       type: String,
@@ -43,8 +44,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-//* Autoincrement id
-userSchema.pre("save", async function (next) {
+userSchema.pre("validate", async function (next) {
   if (!this.isNew) return next();
   try {
     const counter = await Counter.findOneAndUpdate(

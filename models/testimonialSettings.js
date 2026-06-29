@@ -6,6 +6,7 @@ const {
   SENDING_OPTIONS,
   DEFAULT_THANK_YOU,
   DEFAULT_CONTACT_CONSENT,
+  SHARE_CHANNELS,
 } = require("../lib/constants");
 
 const testimonialSettingsSchema = new mongoose.Schema(
@@ -22,10 +23,17 @@ const testimonialSettingsSchema = new mongoose.Schema(
     defaultVideoLength: {
       type: Number,
       default: DEFAULT_VIDEO_LENGTH,
+      min: [1, "defaultVideoLength must be at least 1"],
     },
     videoLengthOptions: {
       type: [Number],
       default: VIDEO_LENGTH_OPTIONS,
+      validate: {
+        validator: function (arr) {
+          return arr.every((v) => typeof v === "number" && v > 0);
+        },
+        message: "videoLengthOptions must be an array of positive numbers",
+      },
     },
     questionnaire: {
       type: [String],
@@ -34,6 +42,12 @@ const testimonialSettingsSchema = new mongoose.Schema(
     sendingOptions: {
       type: [String],
       default: SENDING_OPTIONS,
+      validate: {
+        validator: function (arr) {
+          return arr.every((opt) => SHARE_CHANNELS.includes(opt));
+        },
+        message: `sendingOptions must contain only: ${SHARE_CHANNELS.join(", ")}`,
+      },
     },
     thankYouMessage: {
       type: String,

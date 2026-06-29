@@ -23,6 +23,7 @@ const testimonialSchema = new mongoose.Schema(
     },
     customerEmail: {
       type: String,
+      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Invalid email format"],
     },
     customerPhone: {
       type: String,
