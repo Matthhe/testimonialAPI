@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const User = require("../models/user");
 const { sendSuccess, sendError } = require("../lib/response");
+const logger = require("../lib/logger");
 
 const login = async (req, res) => {
   try {
@@ -29,7 +30,7 @@ const login = async (req, res) => {
 
     return sendSuccess(res, 200, "Login successful", { token: accessToken });
   } catch (err) {
-    console.error(err);
+    logger.error("Login error", err);
     return sendError(res, 500, "Internal server error");
   }
 };
@@ -75,7 +76,7 @@ const register = async (req, res) => {
       token: accessToken,
     });
   } catch (err) {
-    console.error(err);
+    logger.error("Register error", err);
     return sendError(res, 500, "Internal server error");
   }
 };

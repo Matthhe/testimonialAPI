@@ -3,6 +3,7 @@ const TestimonialSettings = require("../models/testimonialSettings");
 const { VALID_TRANSITIONS, SHARE_CHANNELS } = require("../lib/constants");
 const { sendSuccess, sendError } = require("../lib/response");
 const { Parser } = require("json2csv");
+const logger = require("../lib/logger");
 
 const create = async (req, res) => {
   try {
@@ -36,7 +37,7 @@ const create = async (req, res) => {
       testimonial,
     );
   } catch (err) {
-    console.error(err);
+    logger.error("create error", err);
     if (err.name === "ValidationError") {
       return sendError(res, 400, err.message);
     }
@@ -109,7 +110,7 @@ const getAll = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error(err);
+    logger.error("getAll error", err);
     return sendError(res, 500, "Internal server error");
   }
 };
@@ -131,7 +132,7 @@ const getOne = async (req, res) => {
 
     return sendSuccess(res, 200, "Testimonial retrieved", testimonial);
   } catch (err) {
-    console.error(err);
+    logger.error("getOne error", err);
     return sendError(res, 500, "Internal server error");
   }
 };
@@ -170,7 +171,7 @@ const update = async (req, res) => {
 
     return sendSuccess(res, 200, "Testimonial updated", testimonial);
   } catch (err) {
-    console.error(err);
+    logger.error("update error", err);
     if (err.name === "ValidationError") {
       return sendError(res, 400, err.message);
     }
@@ -212,7 +213,7 @@ const updateStatus = async (req, res) => {
 
     return sendSuccess(res, 200, "Status updated", testimonial);
   } catch (err) {
-    console.error(err);
+    logger.error("updateStatus error", err);
     if (err.name === "ValidationError") {
       return sendError(res, 400, err.message);
     }
@@ -241,7 +242,7 @@ const remove = async (req, res) => {
 
     return sendSuccess(res, 200, "Testimonial deleted");
   } catch (err) {
-    console.error(err);
+    logger.error("remove error", err);
     return sendError(res, 500, "Internal server error");
   }
 };
@@ -317,7 +318,7 @@ const share = async (req, res) => {
       testimonial,
     );
   } catch (err) {
-    console.error(err);
+    logger.error("share error", err);
     if (err.name === "ValidationError") {
       return sendError(res, 400, err.message);
     }
@@ -336,7 +337,7 @@ const getSettings = async (req, res) => {
 
     return sendSuccess(res, 200, "Data retrieved successfully", settings);
   } catch (err) {
-    console.error(err);
+    logger.error("getSettings error", err);
     if (err.name === "ValidationError") {
       return sendError(res, 400, err.message);
     }
@@ -446,7 +447,7 @@ const updateSettings = async (req, res) => {
 
     return sendSuccess(res, 200, "Settings saved", settings);
   } catch (err) {
-    console.error(err);
+    logger.error("updateSettings error", err);
     if (err.name === "ValidationError") {
       return sendError(res, 400, err.message);
     }
@@ -531,7 +532,7 @@ const getAnalytics = async (req, res) => {
 
     return sendSuccess(res, 200, "Data retrieved successfully", data);
   } catch (err) {
-    console.error(err);
+    logger.error("getAnalytics error", err);
     return sendError(res, 500, "Internal server error");
   }
 };
@@ -590,7 +591,7 @@ const exportCSV = async (req, res) => {
     );
     return res.send(csv);
   } catch (err) {
-    console.error(err);
+    logger.error("exportCSV error", err);
     return sendError(res, 500, "Internal server error");
   }
 };
@@ -693,7 +694,7 @@ const search = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error(err);
+    logger.error("search error", err);
     return sendError(res, 500, "Internal server error");
   }
 };
@@ -751,9 +752,7 @@ const bulkStatus = async (req, res) => {
       const allowed = VALID_TRANSITIONS[t.status] || [];
       if (allowed.includes(status)) {
         t.status = status;
-        if (status === "shared") {
-          t.sharedAt = new Date();
-        }
+        if (status === "shared") t.sharedAt = new Date();
         updated.push(t);
       } else {
         failed.push({
@@ -771,7 +770,7 @@ const bulkStatus = async (req, res) => {
       errors: failed,
     });
   } catch (err) {
-    console.error(err);
+    logger.error("bulkStatus error", err);
     return sendError(res, 500, "Internal server error");
   }
 };
