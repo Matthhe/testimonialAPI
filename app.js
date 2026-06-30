@@ -4,10 +4,14 @@ const helmet = require("helmet");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const { sendError } = require("./lib/response");
+const logger = require("./lib/logger");
 
 const app = express();
 
-if (process.env.NODE_ENV !== "test") {
+if (process.env.NODE_ENV === "test") {
+  process.env.JWT_SECRET =
+    process.env.JWT_SECRET || "test-secret-key-not-for-production";
+} else {
   if (!process.env.JWT_SECRET) {
     console.error(
       JSON.stringify({
@@ -32,7 +36,15 @@ if (process.env.NODE_ENV !== "test") {
 }
 
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "test"
+        ? "*"
+        : process.env.ALLOWED_ORIGIN || false,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  }),
+);
 app.use(express.json({ limit: "10kb" }));
 
 app.use("/api/auth", require("./routes/authRoute"));
@@ -53,8 +65,8 @@ if (process.env.NODE_ENV !== "test") {
       app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
     })
     .catch((err) => {
-    logger.error("MongoDB connection error", err);     
-    process.exit(1);
+      logger.error("MongoDB connection error", err);
+      process.exit(1);
     });
 }
 
