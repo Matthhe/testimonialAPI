@@ -1,4 +1,5 @@
 const Testimonial = require("../models/testimonial");
+const { ALLOWED_SORT_FIELDS } = require("../../lib/constants");
 const { sendSuccess, sendError } = require("../lib/response");
 const logger = require("../lib/logger");
 
@@ -86,14 +87,8 @@ const search = async (req, res) => {
       return sendError(res, 400, "Invalid limit. Must be between 1 and 100.");
     }
 
-    const allowedSortFields = [
-      "createdAt",
-      "updatedAt",
-      "rating",
-      "customerName",
-    ];
     const sortField = sort.startsWith("-") ? sort.slice(1) : sort;
-    if (!allowedSortFields.includes(sortField)) {
+    if (!ALLOWED_SORT_FIELDS.includes(sortField)) {
       return sendError(
         res,
         400,

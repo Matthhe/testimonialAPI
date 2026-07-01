@@ -1,5 +1,9 @@
 const Testimonial = require("../models/testimonial");
-const { VALID_TRANSITIONS, SHARE_CHANNELS, STATUSES, ALLOWED_SORT_FIELDS } = require("../../lib/constants");
+const {
+  VALID_TRANSITIONS,
+  SHARE_CHANNELS,
+  STATUSES,
+} = require("../../lib/constants");
 const { sendSuccess, sendError } = require("../lib/response");
 const logger = require("../lib/logger");
 
@@ -60,18 +64,11 @@ const bulkStatus = async (req, res) => {
       return sendError(res, 400, "status is required");
     }
 
-    const allowedStatuses = [
-      "draft",
-      "recording",
-      "processing",
-      "completed",
-      "shared",
-    ];
-    if (!allowedStatuses.includes(status)) {
+    if (!STATUSES.includes(status)) {
       return sendError(
         res,
         400,
-        `Invalid status. Allowed: ${allowedStatuses.join(", ")}`,
+        `Invalid status. Allowed: ${STATUSES.join(", ")}`,
       );
     }
 

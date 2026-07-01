@@ -1,5 +1,5 @@
 const TestimonialSettings = require("../models/testimonialSettings");
-const { VALID_TRANSITIONS, SHARE_CHANNELS, STATUSES, ALLOWED_SORT_FIELDS } = require("../../lib/constants");
+const { SHARE_CHANNELS } = require("../../lib/constants");
 const { sendSuccess, sendError } = require("../lib/response");
 const logger = require("../lib/logger");
 

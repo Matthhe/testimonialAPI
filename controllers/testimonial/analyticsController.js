@@ -1,4 +1,5 @@
 const Testimonial = require("../models/testimonial");
+const { STATUSES } = require("../../lib/constants");
 const { sendSuccess, sendError } = require("../lib/response");
 const logger = require("../lib/logger");
 
@@ -52,14 +53,7 @@ const getAnalytics = async (req, res) => {
       });
     }
 
-    const allStatuses = [
-      "draft",
-      "recording",
-      "processing",
-      "completed",
-      "shared",
-    ];
-    allStatuses.forEach((status) => {
+    STATUSES.forEach((status) => {
       if (!byStatusObj[status]) byStatusObj[status] = 0;
     });
 
