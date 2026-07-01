@@ -3,6 +3,8 @@ const router = express.Router();
 const testimonialController = require("../controllers/testimonial");
 const verifyJWT = require("../middleware/auth");
 const validate = require("../middleware/validate");
+const asyncHandler = require("../middleware/asyncHandler");
+
 const {
   testimonialCreateSchema,
   testimonialUpdateSchema,
@@ -13,9 +15,6 @@ const {
 } = require("../validation/schemas");
 
 router.use(verifyJWT);
-
-const asyncHandler = (fn) => (req, res, next) =>
-  Promise.resolve(fn(req, res, next)).catch(next);
 
 router.get("/settings", asyncHandler(testimonialController.getSettings));
 router.post(

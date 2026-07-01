@@ -4,9 +4,7 @@ const authController = require("../controllers/authController");
 const limiter = require("../middleware/rateLimitter");
 const validate = require("../middleware/validate");
 const { registerSchema, loginSchema } = require("../validation/schemas");
-
-const asyncHandler = (fn) => (req, res, next) =>
-  Promise.resolve(fn(req, res, next)).catch(next);
+const asyncHandler = require("../middleware/asyncHandler");
 
 if (process.env.NODE_ENV !== "test") {
   router.post(
