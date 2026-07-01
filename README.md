@@ -12,7 +12,7 @@ REST API сервис для управления видео-отзывами (t
 | **Runtime** | Node.js |
 | **Framework** | Express.js |
 | **База данных** | MongoDB + Mongoose ODM |
-| **Аутентификация** | JWT (jsonwebtoken) + bcrypt |
+| **Аутентификация** | JWT (jsonwebtoken) + bcryptjs |
 | **Безопасность** | Helmet, CORS, Rate Limiting |
 | **Тестирование** | Jest, Supertest, mongodb-memory-server |
 | **Модули** | CommonJS (`require` / `module.exports`) |
