@@ -213,3 +213,58 @@ describe("Analytics", () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe("Security edge cases", () => {
+  let token2;
+
+  beforeAll(async () => {
+    await request(app).post("/api/auth/register").send({
+      email: "other@test.com",
+      password: "password123",
+      businessName: "Other Biz",
+    });
+    const res = await request(app).post("/api/auth/login").send({
+      email: "other@test.com",
+      password: "password123",
+    });
+    token2 = res.body.data.token;
+  });
+
+  test("Cannot delete another user testimonial (403)", async () => {
+    const res = await request(app)
+      .delete(`/api/testimonials/${testimonialId}`)
+      .set("Authorization", `Bearer ${token2}`);
+    expect(res.statusCode).toBe(403);
+  });
+
+  test("Cannot update another user testimonial (403)", async () => {
+    const res = await request(app)
+      .put(`/api/testimonials/${testimonialId}`)
+      .set("Authorization", `Bearer ${token2}`)
+      .send({ customerName: "Hacker" });
+    expect(res.statusCode).toBe(403);
+  });
+
+  test("Duplicate channels rejected (400)", async () => {
+    const res = await request(app)
+      .post(`/api/testimonials/${testimonialId}/share`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ channels: ["email", "email"] });
+    expect(res.statusCode).toBe(400);
+  });
+
+  test("Invalid email in body rejected (400)", async () => {
+    const res = await request(app)
+      .post("/api/testimonials")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ customerName: "Test", customerEmail: "not-an-email" });
+    expect(res.statusCode).toBe(400);
+  });
+
+  test("Limit over 100 rejected (400)", async () => {
+    const res = await request(app)
+      .get("/api/testimonials?limit=999")
+      .set("Authorization", `Bearer ${token}`);
+    expect(res.statusCode).toBe(400);
+  });
+});
