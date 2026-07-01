@@ -575,6 +575,7 @@ const exportCSV = async (req, res) => {
 
     const testimonials = await Testimonial.find(filter)
       .sort({ createdAt: -1 })
+      .limit(10000)
       .lean();
 
     if (!testimonials.length) {
@@ -638,11 +639,7 @@ const search = async (req, res) => {
     const filter = { userId, isDeleted: false };
 
     if (searchText) {
-      const escaped = searchText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      filter.$or = [
-        { customerName: { $regex: escaped, $options: "i" } },
-        { text: { $regex: escaped, $options: "i" } },
-      ];
+      filter.$text = { $search: searchText };
     }
 
     if (minRating || maxRating) {
@@ -762,7 +759,20 @@ const bulkStatus = async (req, res) => {
       }
     });
 
-    await Promise.all(updated.map((t) => t.save()));
+    if (updated.length > 0) {
+      const bulkOps = updated.map((t) => ({
+        updateOne: {
+          filter: { _id: t._id },
+          update: {
+            $set: {
+              status: t.status,
+              ...(t.status === "shared" ? { sharedAt: t.sharedAt } : {}),
+            },
+          },
+        },
+      }));
+      await Testimonial.bulkWrite(bulkOps);
+    }
 
     return sendSuccess(res, 200, "Bulk status update completed", {
       updated: updated.length,
