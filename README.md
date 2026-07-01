@@ -240,7 +240,7 @@ Authorization: Bearer <токен>
 ```bash
 npm test
 ```
-Запускает 14 интеграционных тестов (Jest + Supertest + in-memory MongoDB).  
+Запускает 16 интеграционных тестов (Jest + Supertest + in-memory MongoDB).  
 Покрытие: аутентификация, CRUD отзывов, валидация переходов, шаринг, аналитика, права доступа.
 
 ---
