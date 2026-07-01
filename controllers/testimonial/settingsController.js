@@ -1,7 +1,8 @@
-const TestimonialSettings = require("../models/testimonialSettings");
+const TestimonialSettings = require("../../models/testimonialSettings");
 const { SHARE_CHANNELS } = require("../../lib/constants");
-const { sendSuccess, sendError } = require("../lib/response");
-const logger = require("../lib/logger");
+const { sendSuccess, sendError } = require("../../lib/response");
+const logger = require("../../lib/logger");
+const { handleError } = require("../../lib/errors");
 
 const getSettings = async (req, res) => {
   try {
@@ -15,10 +16,7 @@ const getSettings = async (req, res) => {
     return sendSuccess(res, 200, "Data retrieved successfully", settings);
   } catch (err) {
     logger.error("getSettings error", err);
-    if (err.name === "ValidationError") {
-      return sendError(res, 400, err.message);
-    }
-    return sendError(res, 500, "Internal server error");
+    return handleError(err, res);
   }
 };
 
@@ -125,9 +123,8 @@ const updateSettings = async (req, res) => {
     return sendSuccess(res, 200, "Settings saved", settings);
   } catch (err) {
     logger.error("updateSettings error", err);
-    if (err.name === "ValidationError") {
-      return sendError(res, 400, err.message);
-    }
-    return sendError(res, 500, "Internal server error");
+    return handleError(err, res);
   }
 };
+
+module.exports = { getSettings, updateSettings };

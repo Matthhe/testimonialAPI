@@ -1,7 +1,8 @@
-const Testimonial = require("../models/testimonial");
+const Testimonial = require("../../models/testimonial");
 const { STATUSES, ALLOWED_SORT_FIELDS } = require("../../lib/constants");
-const { sendSuccess, sendError } = require("../lib/response");
-const logger = require("../lib/logger");
+const { sendSuccess, sendError } = require("../../lib/response");
+const logger = require("../../lib/logger");
+const { handleError } = require("../../lib/errors");
 
 const create = async (req, res) => {
   try {
@@ -36,10 +37,7 @@ const create = async (req, res) => {
     );
   } catch (err) {
     logger.error("create error", err);
-    if (err.name === "ValidationError") {
-      return sendError(res, 400, err.message);
-    }
-    return sendError(res, 500, "Internal server error");
+    return handleError(err, res);
   }
 };
 
@@ -96,7 +94,7 @@ const getAll = async (req, res) => {
     });
   } catch (err) {
     logger.error("getAll error", err);
-    return sendError(res, 500, "Internal server error");
+    return handleError(err, res);
   }
 };
 
@@ -118,7 +116,7 @@ const getOne = async (req, res) => {
     return sendSuccess(res, 200, "Testimonial retrieved", testimonial);
   } catch (err) {
     logger.error("getOne error", err);
-    return sendError(res, 500, "Internal server error");
+    return handleError(err, res);
   }
 };
 
@@ -157,10 +155,7 @@ const update = async (req, res) => {
     return sendSuccess(res, 200, "Testimonial updated", testimonial);
   } catch (err) {
     logger.error("update error", err);
-    if (err.name === "ValidationError") {
-      return sendError(res, 400, err.message);
-    }
-    return sendError(res, 500, "Internal server error");
+    return handleError(err, res);
   }
 };
 
@@ -186,6 +181,8 @@ const remove = async (req, res) => {
     return sendSuccess(res, 200, "Testimonial deleted");
   } catch (err) {
     logger.error("remove error", err);
-    return sendError(res, 500, "Internal server error");
+    return handleError(err, res);
   }
 };
+
+module.exports = { create, getAll, getOne, update, remove };

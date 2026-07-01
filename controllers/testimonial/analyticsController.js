@@ -1,7 +1,8 @@
-const Testimonial = require("../models/testimonial");
+const Testimonial = require("../../models/testimonial");
 const { STATUSES } = require("../../lib/constants");
-const { sendSuccess, sendError } = require("../lib/response");
-const logger = require("../lib/logger");
+const { sendSuccess, sendError } = require("../../lib/response");
+const logger = require("../../lib/logger");
+const { handleError } = require("../../lib/errors");
 
 const getAnalytics = async (req, res) => {
   try {
@@ -74,6 +75,8 @@ const getAnalytics = async (req, res) => {
     return sendSuccess(res, 200, "Data retrieved successfully", data);
   } catch (err) {
     logger.error("getAnalytics error", err);
-    return sendError(res, 500, "Internal server error");
+    return handleError(err, res);
   }
 };
+
+module.exports = { getAnalytics };

@@ -1,7 +1,9 @@
-const Testimonial = require("../models/testimonial");
+const Testimonial = require("../../models/testimonial");
 const { ALLOWED_SORT_FIELDS } = require("../../lib/constants");
-const { sendSuccess, sendError } = require("../lib/response");
-const logger = require("../lib/logger");
+const { sendSuccess, sendError } = require("../../lib/response");
+const logger = require("../../lib/logger");
+const { handleError } = require("../../lib/errors");
+const { Parser } = require("json2csv");
 
 const exportCSV = async (req, res) => {
   try {
@@ -59,7 +61,7 @@ const exportCSV = async (req, res) => {
     return res.send(csv);
   } catch (err) {
     logger.error("exportCSV error", err);
-    return sendError(res, 500, "Internal server error");
+    return handleError(err, res);
   }
 };
 
@@ -152,6 +154,8 @@ const search = async (req, res) => {
     });
   } catch (err) {
     logger.error("search error", err);
-    return sendError(res, 500, "Internal server error");
+    return handleError(err, res);
   }
 };
+
+module.exports = { exportCSV, search };

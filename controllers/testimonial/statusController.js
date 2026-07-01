@@ -1,11 +1,12 @@
-const Testimonial = require("../models/testimonial");
+const Testimonial = require("../../models/testimonial");
 const {
   VALID_TRANSITIONS,
   SHARE_CHANNELS,
   STATUSES,
 } = require("../../lib/constants");
-const { sendSuccess, sendError } = require("../lib/response");
-const logger = require("../lib/logger");
+const { sendSuccess, sendError } = require("../../lib/response");
+const logger = require("../../lib/logger");
+const { handleError } = require("../../lib/errors");
 
 const updateStatus = async (req, res) => {
   try {
@@ -42,10 +43,7 @@ const updateStatus = async (req, res) => {
     return sendSuccess(res, 200, "Status updated", testimonial);
   } catch (err) {
     logger.error("updateStatus error", err);
-    if (err.name === "ValidationError") {
-      return sendError(res, 400, err.message);
-    }
-    return sendError(res, 500, "Internal server error");
+    return handleError(err, res);
   }
 };
 
@@ -127,7 +125,7 @@ const bulkStatus = async (req, res) => {
     });
   } catch (err) {
     logger.error("bulkStatus error", err);
-    return sendError(res, 500, "Internal server error");
+    return handleError(err, res);
   }
 };
 
@@ -203,9 +201,8 @@ const share = async (req, res) => {
     );
   } catch (err) {
     logger.error("share error", err);
-    if (err.name === "ValidationError") {
-      return sendError(res, 400, err.message);
-    }
-    return sendError(res, 500, "Internal server error");
+    return handleError(err, res);
   }
 };
+
+module.exports = { share, bulkStatus, updateStatus };

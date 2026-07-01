@@ -4,6 +4,7 @@ require("dotenv").config();
 const User = require("../models/user");
 const { sendSuccess, sendError } = require("../lib/response");
 const logger = require("../lib/logger");
+const { handleError } = require("../lib/errors")
 
 const login = async (req, res) => {
   try {
@@ -30,9 +31,9 @@ const login = async (req, res) => {
 
     return sendSuccess(res, 200, "Login successful", { token: accessToken });
   } catch (err) {
-    logger.error("Login error", err);
-    return sendError(res, 500, "Internal server error");
-  }
+  logger.error("login error", err);
+  return handleError(err, res);
+}
 };
 
 const register = async (req, res) => {
@@ -76,8 +77,8 @@ const register = async (req, res) => {
       token: accessToken,
     });
   } catch (err) {
-    logger.error("Register error", err);
-    return sendError(res, 500, "Internal server error");
+    logger.error("register error", err);
+    return handleError(err, res);
   }
 };
 
