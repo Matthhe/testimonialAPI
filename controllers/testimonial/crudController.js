@@ -1,3 +1,8 @@
+const Testimonial = require("../models/testimonial");
+const { VALID_TRANSITIONS, SHARE_CHANNELS, STATUSES, ALLOWED_SORT_FIELDS } = require("../../lib/constants");
+const { sendSuccess, sendError } = require("../lib/response");
+const logger = require("../lib/logger");
+
 const create = async (req, res) => {
   try {
     const { customerName } = req.body;

@@ -1,3 +1,7 @@
+const Testimonial = require("../models/testimonial");
+const { sendSuccess, sendError } = require("../lib/response");
+const logger = require("../lib/logger");
+
 const getAnalytics = async (req, res) => {
   try {
     const userId = req.user.userId;
