@@ -68,10 +68,9 @@ const testimonialSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-//testimonialSchema.index({ testimonialId: 1 }, { unique: true });
-testimonialSchema.index({ userId: 1 });
-testimonialSchema.index({ status: 1 });
-testimonialSchema.index({ userId: 1, isDeleted: 1 });
+testimonialSchema.index({ userId: 1, isDeleted: 1, createdAt: -1 });
+testimonialSchema.index({ userId: 1, isDeleted: 1, status: 1, createdAt: -1 });
+testimonialSchema.index({ customerName: "text", text: "text" });
 
 const Testimonial = mongoose.model("Testimonial", testimonialSchema);
 module.exports = Testimonial;
