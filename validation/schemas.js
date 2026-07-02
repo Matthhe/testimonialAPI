@@ -19,7 +19,7 @@ const testimonialCreateSchema = Joi.object({
   rating: Joi.number().integer().min(1).max(5).optional(),
   text: Joi.string().optional(),
   consentGiven: Joi.boolean().optional(),
-});
+}).unknown(true);
 
 const testimonialUpdateSchema = Joi.object({
   customerName: Joi.string().optional(),

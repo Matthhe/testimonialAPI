@@ -216,8 +216,15 @@ describe("Analytics", () => {
 
 describe("Security edge cases", () => {
   let token2;
+  let secureTestimonialId;
 
   beforeAll(async () => {
+    const createRes = await request(app)
+      .post("/api/testimonials")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ customerName: "Security Test" });
+    secureTestimonialId = createRes.body.data.testimonialId;
+
     await request(app).post("/api/auth/register").send({
       email: "other@test.com",
       password: "password123",
@@ -232,14 +239,14 @@ describe("Security edge cases", () => {
 
   test("Cannot delete another user testimonial (403)", async () => {
     const res = await request(app)
-      .delete(`/api/testimonials/${testimonialId}`)
+      .delete(`/api/testimonials/${secureTestimonialId}`)
       .set("Authorization", `Bearer ${token2}`);
     expect(res.statusCode).toBe(403);
   });
 
   test("Cannot update another user testimonial (403)", async () => {
     const res = await request(app)
-      .put(`/api/testimonials/${testimonialId}`)
+      .put(`/api/testimonials/${secureTestimonialId}`)
       .set("Authorization", `Bearer ${token2}`)
       .send({ customerName: "Hacker" });
     expect(res.statusCode).toBe(403);
@@ -247,7 +254,7 @@ describe("Security edge cases", () => {
 
   test("Duplicate channels rejected (400)", async () => {
     const res = await request(app)
-      .post(`/api/testimonials/${testimonialId}/share`)
+      .post(`/api/testimonials/${secureTestimonialId}/share`)
       .set("Authorization", `Bearer ${token}`)
       .send({ channels: ["email", "email"] });
     expect(res.statusCode).toBe(400);
