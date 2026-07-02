@@ -94,7 +94,7 @@ const search = async (req, res) => {
       return sendError(
         res,
         400,
-        `Invalid sort field. Allowed: ${allowedSortFields.join(", ")}`,
+        `Invalid sort field. Allowed: ${ALLOWED_SORT_FIELDS.join(", ")}`,
       );
     }
 

@@ -61,7 +61,7 @@ const getAll = async (req, res) => {
       return sendError(
         res,
         400,
-        `Invalid sort field. Allowed: ${ALLOWED_SORT_FIELDS.join(", ")}`, 
+        `Invalid sort field. Allowed: ${ALLOWED_SORT_FIELDS.join(", ")}`,
       );
     }
 

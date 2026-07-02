@@ -1,10 +1,9 @@
-const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const User = require("../models/user");
 const { sendSuccess, sendError } = require("../lib/response");
 const logger = require("../lib/logger");
-const { handleError } = require("../lib/errors")
+const { handleError } = require("../lib/errors");
 
 const login = async (req, res) => {
   try {
@@ -31,9 +30,9 @@ const login = async (req, res) => {
 
     return sendSuccess(res, 200, "Login successful", { token: accessToken });
   } catch (err) {
-  logger.error("login error", err);
-  return handleError(err, res);
-}
+    logger.error("login error", err);
+    return handleError(err, res);
+  }
 };
 
 const register = async (req, res) => {

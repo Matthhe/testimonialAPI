@@ -50,7 +50,7 @@ app.use(express.json({ limit: "10kb" }));
 app.use("/api/auth", require("./routes/authRoute"));
 app.use("/api/testimonials", require("./routes/testimonialRoute"));
 
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   logger.error("Unhandled error", err);
   sendError(res, 500, "Internal server error");
 });
