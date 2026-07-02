@@ -8,9 +8,6 @@ const { handleError } = require("../lib/errors");
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
-      return sendError(res, 400, "Email and password are required.");
-    }
 
     const foundUser = await User.findOne({ email });
     if (!foundUser) {
@@ -38,22 +35,6 @@ const login = async (req, res) => {
 const register = async (req, res) => {
   try {
     const { email, password, businessName } = req.body;
-    if (!email || !password || !businessName) {
-      return sendError(
-        res,
-        400,
-        "Email, password and businessName are required.",
-      );
-    }
-
-    if (password.length < 6) {
-      return sendError(res, 400, "Password must be at least 6 characters.");
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return sendError(res, 400, "Invalid email format.");
-    }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
