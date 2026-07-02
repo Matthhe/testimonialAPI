@@ -1,0 +1,19 @@
+version: "3.9"
+services:
+  api:
+    build: .
+    ports:
+      - "3000:3000"
+    env_file: .env
+    depends_on:
+      - mongo
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/testimonial-api
+
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
